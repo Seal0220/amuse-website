@@ -1,0 +1,32 @@
+{
+  "pages": {
+    "home": {
+      "title": "Home",
+      "welcome": "Welcome to Amuse Art and Design"
+    },
+    "team": {
+      "title": "Our Team",
+      "description": "We are a group of creators focused on art and design."
+    },
+    "works": {
+      "title": "Projects",
+      "description": "Explore our art and design works."
+    },
+    "contact": {
+      "title": "Contact Us",
+      "address": "No. 230, Machang Rd., Houli Dist., Taichung City 422003, Taiwan"
+    }
+  },
+  "components": {
+    "Header": {
+      "home": "Home",
+      "team": "Our Team",
+      "works": "Projects",
+      "contact": "Contact",
+      "company_name": "Amuse Art & Design"
+    },
+    "Footer": {
+      "copyright": "Copyright © 2024 Amuse Art and Design. All rights reserved."
+    }
+  }
+}
