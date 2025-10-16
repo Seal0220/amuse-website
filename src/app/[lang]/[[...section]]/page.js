@@ -3,11 +3,13 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import useLocale from '../../hooks/useLocale';
 import useAnimator from '../../hooks/useAnimator';
+import useSectionPathSync from './hooks/useSectionPathSync';
 
 import Header from '../../components/Header';
 import ContactUs from '../../components/ContactUs';
-import useSectionPathSync from './hooks/useSectionPathSync';
 import Typewriter from '@/app/components/Typewriter';
+import MemberCard from './components/MemberCard';
+
 
 export default function HomePage() {
   const { localeDict } = useLocale();
@@ -20,17 +22,19 @@ export default function HomePage() {
 
   const infoRef = useRef(null);
   const info2Ref = useRef(null);
-  const infoTypewriter1Ref = useRef(false);
-  const infoTypewriter2Ref = useRef(false);
+  const infoTypewriter1Ref = useRef(null);
+  const infoTypewriter2Ref = useRef(null);
 
   const aboutUsRef = useRef(null);
-
+  
   const memberGroupRef = useRef(null);
   const member1Ref = useRef(null);
   const member2Ref = useRef(null);
   const member3Ref = useRef(null);
   const member4Ref = useRef(null);
   const membersRef = [member1Ref, member2Ref, member3Ref, member4Ref];
+  const memberTypewriter1Ref = useRef(null);
+  const memberTitle = ['我們的團隊', '團隊成員'];
 
   const circleGroupRef = useRef(null);
   const circle1Ref = useRef(null);
@@ -46,6 +50,7 @@ export default function HomePage() {
   const segs = pathname.split('/').filter(Boolean);
   const lang = segs[0] || 'zh';
 
+
   // 啟動動畫
   useLayoutEffect(() => {
     animator.start();
@@ -57,8 +62,8 @@ export default function HomePage() {
     animator,
     pathname,
     lang,
-    progressMap: { home: 0, team: 1, contact: 3 },
-    thresholds: { homeEnd: 1, teamEnd: 3 },
+    progressMap: { home: 0, team: 1.36, contact: 3 },
+    thresholds: { homeEnd: 1, teamEnd: 2.5 },
   });
 
   // --------- 動畫定義 ----------
@@ -98,7 +103,7 @@ export default function HomePage() {
       ele.style.transform = 'translate(5rem, 60lvh)';
       ele.style.opacity = '100%';
     })
-    .when({ on: 1.35, to: 2.5 }, (ele) => {
+    .when({ on: 1.35, to: 1.7 }, (ele) => {
       infoTypewriter1Ref.current?.start();
       infoTypewriter2Ref.current?.start();
 
@@ -106,6 +111,10 @@ export default function HomePage() {
       ele.style.fontSize = '1.25rem';
       ele.style.transform = 'translate(5rem, 40lvh)';
       ele.style.opacity = '100%';
+    })
+    .when({ on: 1.7, to: 2.5 }, (ele) => {
+      ele.style.transform = 'translate(5rem, 30lvh)';
+      ele.style.opacity = '0%'
     })
     .after({ on: 2.5 }, (ele) => {
       ele.style.opacity = '0%';
@@ -135,23 +144,75 @@ export default function HomePage() {
       ele.style.opacity = '0%';
     });
 
+  const membersAni = [...membersRef.map(memberRef => animator.useAnimation(memberRef))];
+  const memberGroupAni = animator.useAnimation(memberGroupRef)
+    .before({ on: 1 }, (ele) => {
+      membersAni.forEach(memberAni => memberAni.ele.style.scale = 0);
+      membersAni.forEach(memberAni => memberAni.ele.style.opacity = '0%');
+      membersAni.forEach(memberAni => memberAni.ele.style.margin = '0');
+      membersAni.forEach(memberAni => memberAni.ele.setIsShowDetail(false));
+
+      ele.style.transform = 'translateY(75lvh)';
+    })
+    .when({ on: 1, to: 1.35 }, (ele) => {
+      memberTypewriter1Ref.current?.retype(memberTitle[0], 120);
+
+      membersAni.forEach(memberAni => memberAni.ele.style.scale = 0);
+      membersAni.forEach(memberAni => memberAni.ele.style.opacity = '0%');
+      membersAni.forEach(memberAni => memberAni.ele.style.margin = '0');
+      membersAni.forEach(memberAni => memberAni.ele.setIsShowDetail(false));
+
+      ele.style.transform = 'translateY(65lvh)';
+    })
+    .when({ on: 1.35, to: 1.7 }, (ele) => {
+      memberTypewriter1Ref.current?.retype(memberTitle[0], 120);
+
+      membersAni.forEach(memberAni => memberAni.ele.style.scale = 1);
+      membersAni.forEach(memberAni => memberAni.ele.style.opacity = '100%');
+      membersAni.forEach(memberAni => memberAni.ele.style.margin = '0');
+      membersAni.forEach(memberAni => memberAni.ele.setIsShowDetail(false));
+
+      ele.style.transform = 'translateY(65lvh)';
+    })
+    .when({ on: 1.7, to: 2.5 }, (ele) => {
+      memberTypewriter1Ref.current?.retype(memberTitle[1], 120);
+
+      membersAni.forEach(memberAni => memberAni.ele.style.scale = 1);
+      membersAni.forEach(memberAni => memberAni.ele.style.opacity = '100%');
+      membersAni.forEach(memberAni => memberAni.ele.style.margin = '0 2rem 0 2rem');
+      membersAni.forEach(memberAni => memberAni.ele.setIsShowDetail(true));
+
+      ele.style.transform = 'translateY(50lvh)';
+    })
+    .after({ on: 2.5 }, (ele) => {
+    });
+
   const circlesAni = [...circlesRef.map(circleRef => animator.useAnimation(circleRef))];
   const circleGroupAni = animator.useAnimation(circleGroupRef)
     .before({ on: 0.15 }, (ele) => {
       circlesAni.forEach(circleAni => circleAni.ele.style.scale = 0);
+      circlesAni.forEach(circleAni => circleAni.ele.style.transform = 'translate(0, 0)');
       ele.style.opacity = '0%';
     })
     .when({ on: 0.15, to: 0.75 }, (ele) => {
       circlesAni.forEach(circleAni => circleAni.ele.style.scale = 1);
+      circlesAni.forEach(circleAni => circleAni.ele.style.transform = 'translate(0, 0)');
       ele.style.opacity = '100%';
     })
     .when({ on: 0.75, to: 1.35 }, (ele) => {
       circlesAni.forEach(circleAni => circleAni.ele.style.scale = 1.2);
+      circlesAni.forEach(circleAni => circleAni.ele.style.transform = 'translate(0, 0)');
       ele.style.opacity = '100%';
     })
-    .when({ on: 1.35, to: 2.5 }, (ele) => {
+    .when({ on: 1.35, to: 1.7 }, (ele) => {
       circlesAni.forEach(circleAni => circleAni.ele.style.scale = 1.4);
+      circlesAni.forEach(circleAni => circleAni.ele.style.transform = 'translate(0, 0)');
       ele.style.opacity = '100%';
+    })
+    .when({ on: 1.7, to: 2.5 }, (ele) => {
+      circlesAni.forEach(circleAni => circleAni.ele.style.scale = 2);
+      circlesAni.forEach(circleAni => circleAni.ele.style.transform = 'translate(-23vw, 30lvh)');
+      ele.style.opacity = '70%';
     })
     .after({ on: 2.5 }, (ele) => {
       ele.style.opacity = '0%';
@@ -172,8 +233,8 @@ export default function HomePage() {
           {/* Nav 2 */}
           <div className='absolute flex items-center justify-center p-12 pt-18 box-border bottom-0 w-full h-20 bg-gradient-to-t from-5% from-neutral-900 via-70% via-neutral-900/70 to-100% to-transparent'>
             <div className='flex flex-row gap-6'>
-              <img src='ig-logo.png' className='size-8' />
-              <img src='fb-logo.png' className='size-8' />
+              <img src='/ig-logo.png' className='size-8' />
+              <img src='/fb-logo.png' className='size-8' />
             </div>
             {/* <div className='text-xs select-none'>Copyright © 2024 amuse art and design 阿木司設計 All right reserved.</div> */}
           </div>
@@ -221,24 +282,65 @@ export default function HomePage() {
           style={{ transform: 'translateY(calc(100lvh + 5rem))' }}
           className='fixed z-10 top-0 w-full min-h-lvh flex justify-center bg-neutral-950 p-40 transition ease-in-out duration-700'
         >
-          <h1 className='absolute z-10 right-0 text-[12rem] font-bold text-right'>我們的團隊</h1>
+          <h1 className='absolute z-10 right-0 text-[12rem] font-bold text-right select-none'>
+            <Typewriter
+              ref={memberTypewriter1Ref}
+              speed={500}
+              className='flex'
+            />
+          </h1>
           <p className='text-gray-400 max-w-2xl leading-relaxed'>{locale.description}</p>
           <div className='absolute -top-20 w-full h-20 bg-gradient-to-t from-5% from-neutral-950 via-50% via-neutral-950/70 to-100% to-transparent'></div>
 
-          <div className='absolute z-6 top-0'>
-            <div className='flex flex-row justify-center items-center gap-8'>
-              <img src='/members/01.jpg' className='size-32 object-cover rounded-full' />
-              <img src='/members/02.jpg' className='size-32 object-cover rounded-full' />
-              <img src='/members/03.jpg' className='size-32 object-cover rounded-full' />
-              <img src='/members/04.jpg' className='size-32 object-cover rounded-full' />
+          <div
+            ref={memberGroupRef}
+            style={{ transform: 'translateY(75lvh)' }}
+            className='absolute z-6 top-0 transition ease-in-out duration-700'
+          >
+            <div className='flex flex-row justify-center items-center gap-32'>
+
+              <MemberCard
+                ref={member1Ref}
+                name="林建佑"
+                img="/members/01.jpg"
+                details={{ education: '藝術大學 美術學系', specialty: '雕塑、公共藝術' }}
+                showDetail={true}
+              />
+
+              <MemberCard
+                ref={member2Ref}
+                name="林建佑"
+                img="/members/02.jpg"
+                details={{ education: '藝術大學 美術學系', specialty: '雕塑、公共藝術' }}
+                showDetail={true}
+              />
+
+              <MemberCard
+                ref={member3Ref}
+                name="林建佑"
+                img="/members/03.jpg"
+                details={{ education: '藝術大學 美術學系', specialty: '雕塑、公共藝術' }}
+                showDetail={true}
+              />
+
+              <MemberCard
+                ref={member4Ref}
+                name="林建佑"
+                img="/members/04.jpg"
+                details={{ education: '藝術大學 美術學系', specialty: '雕塑、公共藝術' }}
+                showDetail={true}
+              />
             </div>
           </div>
 
           {/* Circles */}
-          <div ref={circleGroupRef} className='absolute z-5 flex items-center justify-center transition ease-in-out duration-700'>
-            <div ref={circle1Ref} className='absolute border border-white/50 size-40 rounded-full shadow-[0_0_64px_8px] shadow-white/20 transition ease-in-out duration-100' />
-            <div ref={circle2Ref} className='absolute border border-white/50 size-80 rounded-full shadow-[0_0_64px_8px] shadow-white/20 transition ease-in-out duration-200' />
-            <div ref={circle3Ref} className='absolute border border-white/50 size-160 rounded-full shadow-[0_0_64px_8px] shadow-white/20 transition ease-in-out duration-[400ms]' />
+          <div
+            ref={circleGroupRef}
+            className='absolute z-5 flex items-center justify-center transition ease-in-out duration-700'
+          >
+            <div ref={circle1Ref} className='absolute border border-white/50 size-40 rounded-full shadow-[0_0_64px_8px] shadow-white/20 transition ease-in-out duration-200' />
+            <div ref={circle2Ref} className='absolute border border-white/50 size-80 rounded-full shadow-[0_0_64px_8px] shadow-white/20 transition ease-in-out duration-300' />
+            <div ref={circle3Ref} className='absolute border border-white/50 size-160 rounded-full shadow-[0_0_64px_8px] shadow-white/20 transition ease-in-out duration-[500ms]' />
             <div ref={circle4Ref} className='absolute border border-white/50 size-320 rounded-full shadow-[0_0_64px_8px] shadow-white/20 transition ease-in-out duration-[800ms]' />
             <div ref={circle5Ref} className='absolute border border-white/50 size-640 rounded-full shadow-[0_0_64px_8px] shadow-white/20 transition ease-in-out duration-[1600ms]' />
           </div>

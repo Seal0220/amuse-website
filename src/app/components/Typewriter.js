@@ -101,82 +101,131 @@ export function TypewriterParagraph({ paragraphs, speed = 50, start = false, cla
  * - start: 是否開始打字（由 false 轉 true 觸發打字效果）
  * - className: 外層容器的 className
  */
-const Typewriter = forwardRef((
-  { contentKey = null, content, speed = 50, className = '', onDone = () => { }, onlyContent = false },
-  ref
-) => {
-  const intervalRef = useRef(null);
-  const totalRef = useRef(countChars(content));
-  const runningRef = useRef(false);     // 目前是否在跑
-  const completedRef = useRef(false);   // 是否已完成（鎖一次）
-  const [charCount, setCharCount] = useState(0);
-  const [prevKey, setPrevKey] = useState(contentKey);
+const Typewriter = forwardRef(
+  (
+    {
+      contentKey = null,
+      content,
+      speed = 50,
+      className = '',
+      onDone = () => {},
+      onlyContent = false,
+    },
+    ref
+  ) => {
+    const [charCount, setCharCount] = useState(0);
+    const [displayContent, setDisplayContent] = useState(content);
 
-  // 內容鍵值變動 → 重置（允許新的 run-once）
-  useEffect(() => {
-    if (prevKey !== contentKey) {
+    const totalRef = useRef(countChars(content));
+    const intervalRef = useRef(null);
+
+    const runningRef = useRef(false);
+    const completedRef = useRef(false);
+    const prevKeyRef = useRef(contentKey);
+    const lastChangeKey = useRef(null); // 避免重複 retype 同內容
+
+    /* ---------------------------------------------
+     * 內容 key 改變時重置狀態
+     * --------------------------------------------- */
+    useEffect(() => {
+      if (prevKeyRef.current !== contentKey) {
+        clearInterval(intervalRef.current);
+        totalRef.current = countChars(content);
+        setCharCount(0);
+        runningRef.current = false;
+        completedRef.current = false;
+        setDisplayContent(content);
+        prevKeyRef.current = contentKey;
+      }
+    }, [content, contentKey]);
+
+    /* ---------------------------------------------
+     * 外部控制 API
+     * --------------------------------------------- */
+    useImperativeHandle(ref, () => ({
+      start: () => {
+        if (completedRef.current || runningRef.current) return;
+        runTyping(content);
+      },
+      reset: () => {
+        clearInterval(intervalRef.current);
+        runningRef.current = false;
+        completedRef.current = false;
+        setCharCount(0);
+      },
+      stop: () => {
+        clearInterval(intervalRef.current);
+        runningRef.current = false;
+      },
+      retype: (newContent, changeSpeed = 50) => {
+        // 避免重複 retype 同內容
+        if (lastChangeKey.current === newContent) return;
+        lastChangeKey.current = newContent;
+
+        clearInterval(intervalRef.current);
+        runningRef.current = true;
+        completedRef.current = false;
+
+        const current = displayContent;
+        const totalOld = countChars(current);
+        let currentCount = totalOld;
+
+        // Step 1: 倒退刪除
+        intervalRef.current = setInterval(() => {
+          currentCount -= 1;
+          setCharCount(currentCount);
+          if (currentCount <= 0) {
+            clearInterval(intervalRef.current);
+            // Step 2: 更新內容為新內容並重新打字
+            setDisplayContent(newContent);
+            totalRef.current = countChars(newContent);
+            runTyping(newContent, changeSpeed);
+          }
+        }, changeSpeed);
+      },
+      getState: () => ({
+        running: runningRef.current,
+        completed: completedRef.current,
+        total: totalRef.current,
+        count: charCount,
+      }),
+    }));
+
+    /* ---------------------------------------------
+     * 核心打字邏輯（可被 start/retype 共用）
+     * --------------------------------------------- */
+    const runTyping = (text, speedVal = speed) => {
       clearInterval(intervalRef.current);
-      totalRef.current = countChars(content);
       setCharCount(0);
-      runningRef.current = false;
-      completedRef.current = false;  // ← 解鎖，允許重新跑一次
-      setPrevKey(contentKey);
-    }
-  }, [content, contentKey]);
-
-  useImperativeHandle(ref, () => ({
-    start: () => {
-      // 已完成一次 → 忽略之後所有 start 呼叫
-      if (completedRef.current) return;
-
-      // 已在運行中 → 忽略（避免重啟閃爍）
-      if (runningRef.current) return;
-
-      clearInterval(intervalRef.current);
       runningRef.current = true;
-      setCharCount(0);
 
-      const total = totalRef.current;
+      const total = countChars(text);
       let current = 0;
 
       intervalRef.current = setInterval(() => {
         current += 1;
         setCharCount(current);
-
         if (current >= total) {
           clearInterval(intervalRef.current);
           runningRef.current = false;
-          completedRef.current = true; // ← 鎖死，之後不再接受 start
+          completedRef.current = true;
           onDone?.();
         }
-      }, speed);
-    },
-    reset: () => {
-      clearInterval(intervalRef.current);
-      runningRef.current = false;
-      completedRef.current = false; // ← 手動解鎖
-      setCharCount(0);
-    },
-    stop: () => {
-      clearInterval(intervalRef.current);
-      runningRef.current = false;
-    },
-    // 可選：查詢狀態
-    getState: () => ({
-      running: runningRef.current,
-      completed: completedRef.current,
-      total: totalRef.current,
-      count: charCount,
-    }),
-  }));
+      }, speedVal);
+    };
 
-  useEffect(() => {
-    return () => clearInterval(intervalRef.current);
-  }, []);
+    /* ---------------------------------------------
+     * 清除計時器
+     * --------------------------------------------- */
+    useEffect(() => {
+      return () => clearInterval(intervalRef.current);
+    }, []);
 
-  const revealed = revealContent(content, charCount);
-  return onlyContent ? revealed : (<div className={className}>{revealed}</div>);
-}
+    const revealed = revealContent(displayContent, charCount);
+    return onlyContent ? revealed : (
+      <div className={className}>{revealed}</div>
+    );
+  }
 );
 
 export default Typewriter;
