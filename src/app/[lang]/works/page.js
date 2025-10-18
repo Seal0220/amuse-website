@@ -1,38 +1,49 @@
 'use client';
-
 import React, { useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+
 
 export default function WorkPage() {
-  const mountRef = useRef(null); // 建立一個參考，用來掛載 p5.js 畫布
+  const router = useRouter();
+
+  const worksRef = useRef(null);
+  const p5CanvasRef = useRef(null);
+
 
   useEffect(() => {
-    // 以 2D 橢圓軌道模擬 3D 繞行；背面先畫→黑洞→前面，確保遮擋正確
     let p5Instance;
 
-    if (typeof window === 'undefined' || !mountRef.current) return;
+    if (typeof window === 'undefined' || !p5CanvasRef.current) return;
 
     const initSketch = async () => {
       try {
         const p5Module = await import('p5');
         const P5 = p5Module.default || p5Module;
+
         let img1, img2;
         let isReady = false;
         const hoverState = new Map();
+        let particles = [];
+
+        const url1 = '/zh/works/exhibition-space', url2 = '/zh/works/public-art';
+        let planets = [];
+
 
         const sketch = (p) => {
           const getW = () => window.innerWidth;
           const getH = () => window.innerHeight;
 
           // 可調參數
-          const HOLE_R = 220;
+          const HOLE_R = 200;
           const ELLIPSE_TILT_1 = 0.55;
           const ELLIPSE_TILT_2 = -0.35;
           const ELLIPSE_ANGLE_1 = -330;
           const ELLIPSE_ANGLE_2 = -20;
 
           p.setup = () => {
-            p.createCanvas(getW(), getH());
+            p.createCanvas(getW(), getH()), p.WEBGL;
             p.noStroke();
+            p.frameRate(120);
 
             p.loadImage(
               'http://localhost:4001/members/02.jpg',
@@ -57,6 +68,7 @@ export default function WorkPage() {
 
           const checkReady = () => {
             if (img1 && img2) {
+              worksRef.current.style.opacity = 1;
               isReady = true;
               console.log('✅ all images ready');
             }
@@ -103,8 +115,6 @@ export default function WorkPage() {
           };
 
 
-
-
           // 軌道繪製（上半透明、下半實）
           const drawOrbit = (cx, cy, r, tilt, angle) => {
             p.push();
@@ -132,6 +142,7 @@ export default function WorkPage() {
             }
             p.pop();
           };
+
 
           // 平面光暈球
           const drawImageGlow = (img, x, y, baseR, zNorm, id) => {
@@ -197,41 +208,87 @@ export default function WorkPage() {
           };
 
 
+          const updateParticles = (cx, cy, baseScale, holeR) => {
+            // --- 隨機生成新粒子 ---
+            if (p.random() < 0.2) { // 控制發射頻率
+              // 在黑洞範圍內取一個隨機起點（均勻分佈）
+              const angle0 = p.random(p.TWO_PI);
+              const radius0 = Math.sqrt(p.random()) * (holeR * baseScale * 0.8); // sqrt 讓分佈均勻於面積
+              const startX = cx + radius0 * Math.cos(angle0);
+              const startY = cy + radius0 * Math.sin(angle0);
+
+              // 出射方向：朝圓心外放
+              const dir = p.createVector(startX - cx, startY - cy).normalize();
+              const speed = p.random(0.6, 1.6) * baseScale;
+
+              particles.push({
+                x: startX,
+                y: startY,
+                vx: dir.x * speed,
+                vy: dir.y * speed,
+                life: p.random(60, 120),
+                r: p.random(2, 4) * baseScale,
+                alpha: 255,
+              });
+            }
+
+            // --- 更新與繪製粒子 ---
+            for (let i = particles.length - 1; i >= 0; i--) {
+              const pt = particles[i];
+              pt.x += pt.vx;
+              pt.y += pt.vy;
+              pt.life -= 1;
+              pt.alpha = p.map(pt.life, 0, 120, 0, 255);
+
+              // 微微閃爍
+              const flicker = p.noise(pt.x * 0.05, pt.y * 0.05, p.frameCount * 0.05);
+              const brightness = p.map(flicker, 0, 1, 180, 255);
+
+              p.noStroke();
+              p.fill(brightness, brightness, brightness, pt.alpha);
+              p.ellipse(pt.x, pt.y, pt.r);
+
+              if (pt.life <= 0) particles.splice(i, 1);
+            }
+          };
+
 
 
 
           p.draw = () => {
             if (!isReady) { return; }
             p.cursor('default');
+            p.background(38, 38, 38);
 
             const w = getW(), h = getH();
-            p.background(30, 30, 30);
             const baseScale = Math.min(w, h) / 900;
             const t = p.millis() / 1000;
             const cx = w / 2;
             const cy = h / 2 + 40 * baseScale;
 
-            // === 加入全局上下漂浮 ===
-            const tEase = (Math.sin(t / 3) + 1) / 2; // 0~1 平滑循環
-            const easeInOut = 0.5 - 0.5 * Math.cos(Math.PI * tEase);
-
+            // 上下漂浮
             const tilt1Dynamic = ELLIPSE_TILT_1 + Math.sin(t / 2) * 0.05; // 傾斜上下
             const tilt2Dynamic = ELLIPSE_TILT_2 + Math.sin(t / 2 + Math.PI / 3) * 0.05;
             const angle1Dynamic = ELLIPSE_ANGLE_1 + Math.sin(t / 3) * 4;   // 水平擺動（度）
             const angle2Dynamic = ELLIPSE_ANGLE_2 + Math.sin(t / 3 + Math.PI / 4) * 4;
 
-
-
             const a1 = t * 0.4;
             const a2 = t * 0.3;
-
-            const pos1 = orbit2D(cx, cy, 360 * baseScale, a1, tilt1Dynamic, ELLIPSE_ANGLE_1);
-            const pos2 = orbit2D(cx, cy, 520 * baseScale, a2, -tilt2Dynamic, ELLIPSE_ANGLE_2);
-
-            // === 按深度排序，保證正確的前後關係 ===
-            const planets = [
-              { id: 'planet1', img: img1, pos: pos1, r: 40 * baseScale },
-              { id: 'planet2', img: img2, pos: pos2, r: 54 * baseScale },
+            planets = [
+              {
+                id: 'planet1',
+                img: img1,
+                pos: orbit2D(cx, cy, 360 * baseScale, a1, tilt1Dynamic, ELLIPSE_ANGLE_1),
+                r: 40 * baseScale,
+                url: url1,
+              },
+              {
+                id: 'planet2',
+                img: img2,
+                pos: orbit2D(cx, cy, 520 * baseScale, a2, -tilt2Dynamic, ELLIPSE_ANGLE_2),
+                r: 54 * baseScale,
+                url: url2,
+              }
             ];
 
             // 依 zNorm 排序（遠的先畫）
@@ -248,8 +305,7 @@ export default function WorkPage() {
             drawOrbit(cx, cy, 520 * baseScale, tilt2Dynamic, angle2Dynamic);
 
             // 先畫遠的
-            drawImageGlow(planets[0].img, planets[0].pos.x, planets[0].pos.y, planets[0].r, planets[0].pos.zNorm, planets[0].id
-            );
+            drawImageGlow(planets[0].img, planets[0].pos.x, planets[0].pos.y, planets[0].r, planets[0].pos.zNorm, planets[0].id);
 
             // 黑洞
             const pulse = (Math.sin(t * 0.8) + 1) / 2;
@@ -257,17 +313,43 @@ export default function WorkPage() {
             const holeScale = p.lerp(0.9, 1.1, easePulse);
 
             drawBlackHole(cx, cy, HOLE_R * baseScale, holeScale);
+            updateParticles(cx, cy, baseScale, HOLE_R);
+
 
             // 再畫近的
-            drawImageGlow(planets[1].img, planets[1].pos.x, planets[1].pos.y, planets[1].r, planets[1].pos.zNorm, planets[1].id
-            );
-
+            drawImageGlow(planets[1].img, planets[1].pos.x, planets[1].pos.y, planets[1].r, planets[1].pos.zNorm, planets[1].id);
 
           };
+
+          p.mousePressed = () => {
+            if (!isReady || !planets.length) return;
+            for (const planet of planets) {
+              const d = p.dist(p.mouseX, p.mouseY, planet.pos.x, planet.pos.y);
+              if (d < planet.r * 1.2) {
+                try {
+                  // 先淡出畫面
+                  if (worksRef.current) {
+                    worksRef.current.style.opacity = 0;
+                  }
+
+                  // 稍晚再移除畫布（避免瞬間中斷動畫）
+                  setTimeout(() => {
+                    try {
+                      p.remove();
+                      router.push(planet.url);
+                    } catch { }
+                  }, 600);
+                } catch { }
+                break;
+              }
+            }
+          };
+
+
         };
 
-        if (mountRef.current) {
-          p5Instance = new P5(sketch, mountRef.current);
+        if (p5CanvasRef.current) {
+          p5Instance = new P5(sketch, p5CanvasRef.current);
         }
       } catch (err) {
         console.error('p5 init error', err);
@@ -286,20 +368,18 @@ export default function WorkPage() {
 
   }, []);
 
-  // React 元件的主要結構
+
   return (
-    <div className="relative w-full h-lvh bg-red-200 overflow-hidden">
+    <div ref={worksRef} className='relative w-full h-lvh bg-neutral-800 overflow-hidden transition-all ease-in-out duration-500' style={{ opacity: 0, }}>
       {/* 左上角文字區塊 */}
-      <div className="absolute left-[8%] top-[14%] text-white select-none z-[5]">
-        <div className="text-4xl mb-1">作品類別</div>
-        <div className="text-lg text-neutral-400">Our Works</div>
+      <div className='absolute left-[8%] top-[14%] text-white select-none z-[5]'>
+        <div className='text-4xl mb-1'>作品類別</div>
+        <div className='text-lg text-neutral-400'>Our Works</div>
       </div>
 
       {/* 掛載 p5 畫布的容器 */}
-      <div ref={mountRef} className="absolute inset-0" />
+      <div ref={p5CanvasRef} className='absolute inset-0 transition-all ease-in-out duration-600' />
 
-      {/* 上方黑色漸層遮罩 */}
-      <div className="pointer-events-none absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-black/60 to-transparent z-[10]" />
     </div>
   );
 }

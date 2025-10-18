@@ -1,12 +1,12 @@
 'use client';
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import useLocale from '../../hooks/useLocale';
-import useAnimator from '../../hooks/useAnimator';
+import useLocale from '@/app/hooks/useLocale';
+import useAnimator from '@/app/hooks/useAnimator';
 import useSectionPathSync from './hooks/useSectionPathSync';
 
-import Header from '../../components/Header';
-import ContactUs from '../../components/ContactUs';
+import Header from '@/app/components/Header';
+import ContactUs from '@/app/components/ContactUs';
 import Typewriter from '@/app/components/Typewriter';
 import MemberCard from './components/MemberCard';
 

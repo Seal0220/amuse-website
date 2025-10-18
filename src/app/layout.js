@@ -1,6 +1,7 @@
 import '@/app/globals.css';
 import Header from '@/app/components/Header';
-import Footer from './components/Footer';
+import Footer from '@/app/components/Footer';
+import TransitionLayout from '@/app/components/TransitionLayout';
 
 import { Noto_Serif_SC } from 'next/font/google';
 
@@ -15,16 +16,14 @@ export const metadata = {
   description: 'Amuse Art and Design 官方網站',
 };
 
-export default function RootLayout({ children, params }) {
-  const { lang } = params;
-
+export default function RootLayout({ children }) {
   return (
-    <html lang='zh-Hant'>
-      <body className={`${notoSerifSC.className} bg-black text-white`} >
+    <html lang="zh-Hant">
+      <body className={`${notoSerifSC.className} bg-neutral-800 text-white`}>
         <Header />
         {children}
         <Footer />
       </body>
-    </html >
+    </html>
   );
 }
