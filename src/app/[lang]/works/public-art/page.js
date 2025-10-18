@@ -2,7 +2,8 @@
 import React, { useRef, useMemo, useEffect } from 'react';
 import useAnimator from '@/app/hooks/useAnimator';
 import useBreathingNoise from '@/app/hooks/useBreathingNoise';
-import useAxisWobble from '@/app/hooks/useAxisWobble';
+// import useAxisWobble from '@/app/hooks/useAxisWobble';
+import useAxisWobbleRef from '@/app/hooks/useAxisWobble';
 
 
 export default function PublicArt() {
@@ -24,9 +25,6 @@ export default function PublicArt() {
   const animatorRef = useRef(null);
   const animator = useAnimator(animatorRef);
 
-  const axisRef = useRef(null);
-  const axisDeg = useAxisWobble(-150, 10, 0.6); // 負值往左上，正值往右上
-
   const tickRefs = useRef([]);
   tickRefs.current = years.map((_, i) => tickRefs.current[i] ?? React.createRef());
   const lineRef = useRef(null);
@@ -35,6 +33,12 @@ export default function PublicArt() {
   const ringGroupRef = useRef(null);
   const ringRefs = useRef([]);
   ringRefs.current = years.map((_, i) => ringRefs.current[i] ?? React.createRef());
+
+  const textRefs = useRef([]);
+  textRefs.current = years.map((_, i) => textRefs.current[i] ?? null);
+
+  const axisRef = useRef(null);
+  useAxisWobbleRef(axisRef, -150, 10, 0.25, textRefs.current);
 
 
   useBreathingNoise(centerTickRef, { baseBlur: 64, baseSpread: 16 });
@@ -145,7 +149,7 @@ export default function PublicArt() {
               <div
                 key={y}
                 ref={ringRefs.current[i]}
-                className='absolute rounded-full border border-white/50 shadow-[0_0_64px_8px] shadow-white/20 transition-all duration-300 ease-out flex items-center justify-center text-white select-none'
+                className='absolute rounded-full border border-white/50 shadow-[0_0_64px_8px] shadow-white/20 transition-all duration-300 ease-out flex items-center justify-center text-white select-none will-change-transform transform-3d'
                 style={{ width: `${diam}px`, height: `${diam}px`, opacity: 0 }}
               >
               </div>
@@ -155,9 +159,9 @@ export default function PublicArt() {
           {/* ---- 斜線與節點（新增） ---- */}
           <div
             ref={axisRef}
-            className='absolute left-1/2 top-1/2 pointer-events-none z-20'
+            className="absolute left-1/2 top-1/2 pointer-events-none z-20 will-change-transform transform-3d"
             style={{
-              transform: `translate(-50%, -50%) rotate(${axisDeg}deg)`,
+              transform: `translate(-50%, -50%) rotate(-150deg)`,
               transformOrigin: 'center center',
             }}
           >
@@ -175,7 +179,7 @@ export default function PublicArt() {
                   <div
                     key={'center-tick'}
                     ref={centerTickRef}
-                    className='absolute z-5 size-20 rounded-full bg-white border border-black/40 shadow-[0_0_64px_16px] shadow-white transition-all duration-300 ease-out'
+                    className='absolute z-5 size-20 rounded-full bg-white border border-black/40 shadow-[0_0_64px_16px] shadow-white transition-all duration-300 ease-out will-change-transform transform-3d'
                     style={{ transform: 'translate(-50%, -50%) scale(1)' }}
                   />
                 )
@@ -184,7 +188,7 @@ export default function PublicArt() {
                   <div
                     key={`tick-${y}-${i}`}
                     ref={tickRefs.current[i]}
-                    className='absolute transition-all duration-300 ease-out'
+                    className='absolute transition-all duration-300 ease-out will-change-transform transform-3d'
                     style={{
                       left: 0,
                       top: 0,
@@ -196,8 +200,8 @@ export default function PublicArt() {
 
                     {/* 年份文字（為了閱讀性逆向旋轉） */}
                     <div
-                      className='absolute left-4 top-1/2 -translate-y-1/2 text-white/90'
-                      style={{ transform: `rotate(${-axisDeg}deg)` }}
+                      ref={(el) => { if (el) textRefs.current[i] = el; }}
+                      className='absolute left-4 top-1/2 -translate-y-1/2 text-white/90 will-change-transform transform-3d'
                     >
                       <span className='text-3xl font-bold tracking-wide text-nowrap'>{y}</span>
                     </div>
@@ -210,6 +214,6 @@ export default function PublicArt() {
         </div>
 
       </div>
-    </div>
+    </div >
   );
 }

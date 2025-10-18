@@ -3,32 +3,38 @@ import { useRef, useEffect, useState } from 'react';
 import createPerlinNoise from '@/app/functions/createPerlinNoise';
 
 /**
- * Hook: useAxisWobble
- * 讓軸線角度隨 Perlin Noise 擺動
- * @param {number} baseDeg - 基礎角度
- * @param {number} amplitude - 最大擺動角度（±）
- * @param {number} speed - 擺動速度
- * @returns {number} 動態角度
+ * useAxisWobbleRef
+ * - 不透過 React 重新 render
+ * - 直接對元素的 transform 更新 rotate()
  */
-export default function useAxisWobble(baseDeg = -150, amplitude = 10, speed = 0.1) {
+export default function useAxisWobbleRef(ref, baseDeg = -150, amplitude = 10, speed = 0.5, textRefs = []) {
   const noise = useRef(createPerlinNoise());
-  const [deg, setDeg] = useState(baseDeg);
+  const frame = useRef(null);
+  const start = useRef(Math.random() * 1000);
 
   useEffect(() => {
-    let t = Math.random() * 1000;
-    let frame;
+    if (!ref?.current) return;
+    const el = ref.current;
+    let t = start.current;
 
     const animate = () => {
       t += 0.005 * speed;
-      const n = noise.current(t) * 0.5 + 0.5; // normalize 0~1
-      const delta = (n - 0.5) * 2 * amplitude; // -amplitude ~ +amplitude
-      setDeg(baseDeg + delta);
-      frame = requestAnimationFrame(animate);
+      const n = noise.current(t) * 0.5 + 0.5;
+      const delta = (n - 0.5) * 2 * amplitude;
+      const deg = baseDeg + delta;
+
+      el.style.transform = `translate(-50%, -50%) rotate(${deg}deg)`;
+      el.style.transformOrigin = 'center center';
+
+      // --- 更新所有年份文字反向旋轉 ---
+      textRefs.forEach((r) => {
+        if (r) r.style.transform = `rotate(${-deg}deg)`;
+      });
+
+      frame.current = requestAnimationFrame(animate);
     };
 
-    frame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(frame);
-  }, [baseDeg, amplitude, speed]);
-
-  return deg;
+    frame.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame.current);
+  }, [ref, baseDeg, amplitude, speed, textRefs]);
 }
