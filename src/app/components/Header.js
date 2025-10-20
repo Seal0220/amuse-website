@@ -55,18 +55,18 @@ export default function Header() {
         <nav className='flex flex-row gap-10'>
           <div className='flex flex-row gap-20 text-lg tracking-wide items-center'>
             {/* 這三個在動畫頁用同頁切換，不在動畫頁就真跳轉 */}
-            <a href={`/${lang}`} onClick={(e) => navigateSamePage(e, 'home')} className='hover:text-gray-300'>
+            <a href={`/${lang}`} onClick={(e) => navigateSamePage(e, 'home')} className='hover:text-gray-300 text-nowrap'>
               {locale.home}
             </a>
-            <a href={`/${lang}/team`} onClick={(e) => navigateSamePage(e, 'team')} className='hover:text-gray-300'>
+            <a href={`/${lang}/team`} onClick={(e) => navigateSamePage(e, 'team')} className='hover:text-gray-300 text-nowrap'>
               {locale.team}
             </a>
-            <a href={`/${lang}/contact`} onClick={(e) => navigateSamePage(e, 'contact')} className='hover:text-gray-300'>
+            <a href={`/${lang}/contact`} onClick={(e) => navigateSamePage(e, 'contact')} className='hover:text-gray-300 text-nowrap'>
               {locale.contact}
             </a>
 
             {/* works 保留 Link（本來就是獨立頁） */}
-            <Link href={`/${lang}/works`} className='hover:text-gray-300'>
+            <Link href={`/${lang}/works`} className='hover:text-gray-300 text-nowrap'>
               {locale.works}
             </Link>
           </div>
