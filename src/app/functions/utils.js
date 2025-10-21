@@ -25,3 +25,21 @@ export function convertTransformRotation(transform) {
   rotation = (rotation + 360) % 360;
   return rotation;
 }
+
+
+export function deg2rad(d) {
+  return (d * Math.PI) / 180;
+}
+
+export function normRad(a) {
+  while (a <= -Math.PI) { a += 2 * Math.PI; }
+  while (a > Math.PI) { a -= 2 * Math.PI; }
+  return a;
+};
+
+export function nearestAngle(from, to) {
+  let t = to, TWO = Math.PI * 2;
+  while (t - from > Math.PI) { t -= TWO; }
+  while (t - from <= -Math.PI) { t += TWO; }
+  return t;
+};

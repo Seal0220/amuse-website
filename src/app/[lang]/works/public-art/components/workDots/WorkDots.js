@@ -1,23 +1,15 @@
 'use client';
 import React, { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import { deg2rad, normRad, nearestAngle } from '@/app/functions/utils';
+import { useRouter } from 'next/navigation';
 
 // ==== 小工具 ====
-const deg2rad = (d) => (d * Math.PI) / 180;
-const normRad = (a) => { while (a <= -Math.PI) a += 2 * Math.PI; while (a > Math.PI) a -= 2 * Math.PI; return a; };
-const nearestAngle = (from, to) => {
-  let t = to, TWO = Math.PI * 2;
-  while (t - from > Math.PI) t -= TWO;
-  while (t - from <= -Math.PI) t += TWO;
-  return t;
-};
 const setDotAtAngle = (dot, angleRad, radiusPx) => {
   dot.style.transform =
     `translate(-50%, -50%) rotate(${angleRad}rad) translate(${radiusPx}px, 0)`;
 };
 
 // 等弧長佈點（固定 gapPx），且「靠中線第一對」對中線也保留等弧長（=gapPx）
-// 同時保留角度式中線半留白 centerVoidHalfDeg（度）
-// keepCenter=true 時（奇數顆）在正中放一顆（通常你要留白所以設 false）
 function layoutDots(
   dots,
   radius,
@@ -41,13 +33,12 @@ function layoutDots(
   const c = normRad(deg2rad(centerDeg));
 
   const slots = [];
-  if (keepCenter && (n % 2 === 1)) {
-    slots.push(c); // 放正中央一顆，無視留白
-  }
+  if (keepCenter && (n % 2 === 1)) slots.push(c);
+
   const pairs = keepCenter && (n % 2 === 1) ? Math.floor((n - 1) / 2) : Math.floor(n / 2);
-  const startOff = pad + g; // 只在這裡多加一次 gap
+  const startOff = pad + g;
   for (let k = 0; k < pairs; k++) {
-    const off = startOff + k * g; // 之後固定每步 +g（等弧長），不做其它累加
+    const off = startOff + k * g;
     slots.push(c - off);
     slots.push(c + off);
   }
@@ -56,7 +47,6 @@ function layoutDots(
     slots.push(c + extraOff);
   }
 
-  // 依目前角度就近指派，避免交叉
   const indexed = dots
     .map((dot) => ({ dot, ang: parseFloat(dot.dataset.curAngle || dot.dataset.baseAngle || '0') }))
     .sort((a, b) => a.ang - b.ang);
@@ -89,17 +79,20 @@ const WorkDots = forwardRef(function WorkDots(
     basicAxisDeg,      // 中心軸角度
     baseSize = 10,     // 紅點基礎尺寸 px
     largeSize = 64,    // 紅點放大尺寸 px
-    ringGroupRef,      // 只用來估中心（這版不需再用，可保留備用）
-    // 參數：可調整但預設沿用你現值
+    ringGroupRef,
     dotsPerRing = 10,
     edgeMarginDeg = 10,
     gapPx = 40,
     centerVoidHalfDeg = 5,
     keepCenter = false,
+    hoverSize = 40,
+    href = '',         // 目標路由（同分頁跳轉）
   },
   apiRef
 ) {
-  const workDotsGroupRef = useRef([]); // Array<HTMLElement[]>
+  const workDotsGroupRef = useRef([]);
+  const handlersRef = useRef([]);
+  const router = useRouter();
 
   // 初始化：在每個年份圈掛上紅點（以弧形 transform 定位）
   useEffect(() => {
@@ -110,6 +103,7 @@ const WorkDots = forwardRef(function WorkDots(
       ringNode.querySelectorAll('[data-work-dot="1"]').forEach((n) => n.remove());
     });
     workDotsGroupRef.current = [];
+    handlersRef.current = [];
 
     const nRings = years.length - 1; // 不含 CENTER
     ringRefs.current.forEach((r, i) => {
@@ -117,6 +111,7 @@ const WorkDots = forwardRef(function WorkDots(
       const y = years[i];
       if (!ringNode || !isYear(y)) {
         workDotsGroupRef.current[i] = [];
+        handlersRef.current[i] = [];
         return;
       }
       const radius = diamAt(i) / 2;
@@ -131,6 +126,7 @@ const WorkDots = forwardRef(function WorkDots(
       const maxRad = centerRad + halfSpan;
 
       const dots = [];
+      const handlers = [];
       for (let j = 0; j < dotsPerRing; j++) {
         const angle = minRad + Math.random() * (maxRad - minRad);
         const dot = document.createElement('div');
@@ -142,30 +138,89 @@ const WorkDots = forwardRef(function WorkDots(
         dot.style.willChange = 'transform,width,height';
         dot.style.filter = 'drop-shadow(0 0 12px rgba(255,255,255,0.7))';
 
-        dot.dataset.workDot = '1';         // 旗標：本管理器建立
+        // 互動：為了 hover，需要接收事件；點擊是否生效由 state 判斷
+        dot.style.pointerEvents = 'auto';   // 覆蓋 class 的 pointer-events-none，讓 hover 可用
+        dot.style.cursor = 'default';       // 只有 active 時改成 pointer
+        dot.tabIndex = 0;
+
+        dot.dataset.workDot = '1';
         dot.dataset.radius = String(radius);
         dot.dataset.baseAngle = String(angle);
         dot.dataset.curAngle = String(angle);
         dot.dataset.baseSize = String(baseSize);
+        dot.dataset.state = 'inactive'; // active/inactive
+        dot.dataset.hover = '0';        // 0/1
 
         setDotAtAngle(dot, angle, radius);
         ringNode.appendChild(dot);
         dots.push(dot);
+
+        // 事件：hover / leave / click / keyboard
+        const onEnter = () => {
+          dot.dataset.hover = '1';
+          const isActive = dot.dataset.state === 'active';
+          const base = isActive ? largeSize : Number(dot.dataset.baseSize || `${baseSize}`);
+          const targetSize = base + hoverSize;
+          dot.style.width = `${targetSize}px`;
+          dot.style.height = `${targetSize}px`;
+        };
+        const onLeave = () => {
+          dot.dataset.hover = '0';
+          const isActive = dot.dataset.state === 'active';
+          const base = isActive ? largeSize : Number(dot.dataset.baseSize || `${baseSize}`);
+          dot.style.width = `${base}px`;
+          dot.style.height = `${base}px`;
+        };
+
+        // 僅在 active（放大）時才允許路由跳轉
+        const triggerClick = () => {
+          if (dot.dataset.state !== 'active') return; // 未放大：直接忽略
+          if (href) {
+            try { router.push(href); } catch (_) {}
+          }
+        };
+        const onClick = (e) => {
+          e.preventDefault();
+          triggerClick();
+        };
+        const onKeyDown = (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            triggerClick();
+          }
+        };
+
+        dot.addEventListener('mouseenter', onEnter);
+        dot.addEventListener('mouseleave', onLeave);
+        dot.addEventListener('click', onClick);
+        dot.addEventListener('keydown', onKeyDown);
+        handlers.push({ onEnter, onLeave, onClick, onKeyDown });
       }
+
       workDotsGroupRef.current[i] = dots;
+      handlersRef.current[i] = handlers;
     });
 
-    // 清理：移除所有建立的 dots
+    // 清理：移除所有建立的 dots 與事件
     return () => {
       ringRefs.current.forEach((r, i) => {
         const ringNode = r?.current;
         if (!ringNode) return;
         const group = workDotsGroupRef.current[i] || [];
-        group.forEach((dot) => {
+        const handlers = handlersRef.current[i] || [];
+        group.forEach((dot, idx) => {
+          const h = handlers[idx];
+          if (h) {
+            dot.removeEventListener('mouseenter', h.onEnter);
+            dot.removeEventListener('mouseleave', h.onLeave);
+            dot.removeEventListener('click', h.onClick);
+            dot.removeEventListener('keydown', h.onKeyDown);
+          }
           if (dot && dot.parentNode === ringNode) ringNode.removeChild(dot);
         });
       });
       workDotsGroupRef.current = [];
+      handlersRef.current = [];
     };
   }, [years.length]); // 年份數量改變才重建；其餘參數在 updateRing 使用
 
@@ -186,16 +241,22 @@ const WorkDots = forwardRef(function WorkDots(
           keepCenter,
         });
 
-        // 再放大尺寸（寬高），陰影不變
+        // 放大（active），允許點擊，游標顯示 pointer
         workDots.forEach(dot => {
           const ang = parseFloat(dot.dataset.curAngle || dot.dataset.baseAngle || '0');
-          setDotAtAngle(dot, ang, radius); // 只設角度與半徑
-          dot.style.width = `${largeSize}px`;
-          dot.style.height = `${largeSize}px`;
+          setDotAtAngle(dot, ang, radius);
+
+          dot.dataset.state = 'active';
+          const hovered = dot.dataset.hover === '1';
+          const size = hovered ? (largeSize + hoverSize) : largeSize;
+
+          dot.style.width = `${size}px`;
+          dot.style.height = `${size}px`;
           dot.style.filter = 'drop-shadow(0 0 32px rgba(255,255,255,0.9))';
+          dot.style.cursor = 'pointer';
         });
       } else {
-        // 沿弧回初始角，並把尺寸縮回 base
+        // 縮回（inactive），點擊無效，游標恢復 default
         workDots.forEach((dot) => {
           const baseA = parseFloat(dot.dataset.baseAngle || '0');
           const curA = parseFloat(dot.dataset.curAngle || String(baseA));
@@ -203,14 +264,19 @@ const WorkDots = forwardRef(function WorkDots(
           dot.dataset.curAngle = String(tgt);
           setDotAtAngle(dot, tgt, radius);
 
+          dot.dataset.state = 'inactive';
           const baseSz = Number(dot.dataset.baseSize || String(baseSize));
-          dot.style.width = `${baseSz}px`;
-          dot.style.height = `${baseSz}px`;
+          const hovered = dot.dataset.hover === '1';
+          const size = hovered ? (baseSz + hoverSize) : baseSz;
+
+          dot.style.width = `${size}px`;
+          dot.style.height = `${size}px`;
           dot.style.filter = 'drop-shadow(0 0 12px rgba(255,255,255,0.7))';
+          dot.style.cursor = 'default';
         });
       }
     }
-  }), [basicAxisDeg, gapPx, centerVoidHalfDeg, keepCenter]);
+  }), [basicAxisDeg, gapPx, centerVoidHalfDeg, keepCenter, href, baseSize, largeSize, hoverSize]);
 
   return null; // 純管理者，不渲染 UI
 });
