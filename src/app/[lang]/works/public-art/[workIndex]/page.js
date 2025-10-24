@@ -29,14 +29,15 @@ export default function WorkPage() {
         </div>
 
         {/* Contents */}
-        <div className='relative w-full bg-neutral-950 flex-1 flex flex-col gap-10 items-center mb-[40lvh]'>
+        <div className='relative w-full bg-neutral-950 flex-1 flex flex-col gap-10 items-center mb-[20lvh]'>
 
           {/* Decorative Elements */}
           <div className='sticky z-50 w-full top-0 left-0 flex items-center justify-center bg-neutral-950 pt-32'>
-          <div className='h-0.5 w-full bg-gradient-to-r from-transparent via-white to-transparent'></div>
+            <div className='relative h-0.5 w-full bg-gradient-to-r from-transparent via-white to-transparent'></div>
           </div>
 
-          <div className='p-40 flex flex-col gap-10 items-center'>
+          <div className='p-40 flex flex-col gap-16 items-center overflow-hidden'>
+
             {/* Ellipse */}
             <div className='relative w-fit'>
               <div className='w-120 h-80 bg-transparent border-2 border-white rounded-[50%/50%] shadow-[0_0_48px_16px] shadow-white/25 overflow-hidden'>
@@ -55,7 +56,7 @@ export default function WorkPage() {
 
 
             {/* Info */}
-            <div className='flex flex-col items-baseline text-base text-left whitespace-nowrap'>
+            <div className='border-2 border-white py-10 px-16 rounded-full flex flex-col gap-1 items-baseline text-base text-left tracking-wider whitespace-nowrap'>
               <div className='flex flex-row justify-center'>
                 <span className='text-sm mt-px mr-2 w-16'>設置地點: </span>
                 <span className='font-bold'>{testData.location}</span>
@@ -71,7 +72,7 @@ export default function WorkPage() {
             </div>
 
             {/* Description */}
-            <div className='max-w-4xl text-xl font-medium tracking-tighter leading-8 text-center'>
+            <div className='max-w-3xl text-xl font-medium tracking-tighter leading-8 text-center'>
               {testData.description}
             </div>
 

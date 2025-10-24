@@ -19,7 +19,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="zh-Hant">
-      <body className={`${notoSerifSC.className} bg-neutral-800 text-white`}>
+      <body className={`${notoSerifSC.className} bg-neutral-800 text-white w-full`}>
         <Header />
         {children}
         <Footer />
