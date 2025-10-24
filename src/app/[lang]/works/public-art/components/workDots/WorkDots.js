@@ -86,7 +86,7 @@ const WorkDots = forwardRef(function WorkDots(
     centerVoidHalfDeg = 5,
     keepCenter = false,
     hoverSize = 40,
-    href = '',         // 目標路由（同分頁跳轉）
+    href = '/zh/works/public-art/test',         // 目標路由（同分頁跳轉）
   },
   apiRef
 ) {

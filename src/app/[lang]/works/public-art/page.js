@@ -142,7 +142,7 @@ export default function PublicArt() {
       <div
         ref={animatorRef}
         style={{ opacity: 0 }}
-        className='sticky top-0 w-full h-screen bg-neutral-900 overflow-hidden transition-opacity duration-500 ease-in-out'
+        className='sticky top-0 w-full h-screen bg-neutral-950 overflow-hidden transition-opacity duration-500 ease-in-out'
       >
         {/* 環 */}
         <div

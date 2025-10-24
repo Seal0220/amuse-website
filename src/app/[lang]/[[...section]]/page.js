@@ -26,7 +26,7 @@ export default function HomePage() {
   const infoTypewriter2Ref = useRef(null);
 
   const aboutUsRef = useRef(null);
-  
+
   const memberGroupRef = useRef(null);
   const member1Ref = useRef(null);
   const member2Ref = useRef(null);
@@ -290,7 +290,8 @@ export default function HomePage() {
             />
           </h1>
           <p className='text-gray-400 max-w-2xl leading-relaxed'>{locale.description}</p>
-          <div className='absolute -top-20 w-full h-20 bg-gradient-to-t from-5% from-neutral-950 via-50% via-neutral-950/70 to-100% to-transparent'></div>
+          
+          <div className='absolute -top-20 w-full h-20 bg-gradient-to-t from-5% from-neutral-950 via-50% via-neutral-950/70 to-100% to-transparent' />
 
           <div
             ref={memberGroupRef}

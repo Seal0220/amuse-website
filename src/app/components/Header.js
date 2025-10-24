@@ -38,7 +38,7 @@ export default function Header() {
   };
 
   return (
-    <header className='fixed top-0 w-full z-[100] text-white bg-gradient-to-b from-black/80 via-black/40 to-transparent'>
+    <header className='fixed top-0 w-lvw z-[100] text-white bg-gradient-to-b from-black/80 via-black/40 to-transparent overflow-hidden'>
       <div className='mx-auto flex flex-row gap-10 items-center justify-between px-8 py-6'>
         {/* LOGO */}
         <div className='flex items-center'>
