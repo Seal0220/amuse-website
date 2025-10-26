@@ -2,12 +2,22 @@ import { notFound } from 'next/navigation';
 
 import { getPublicArtWorkBySlug, getPublicArtWorkSlugs } from '@/lib/works';
 
+const supportedLanguages = ['zh', 'en'];
+
 export function generateStaticParams() {
-  return getPublicArtWorkSlugs().map((slug) => ({ workIndex: slug }));
+  const slugs = getPublicArtWorkSlugs();
+
+  return supportedLanguages.flatMap((lang) =>
+    slugs.map((slug) => ({
+      lang,
+      workIndex: slug,
+    })),
+  );
 }
 
 export default function WorkPage({ params }) {
-  const work = getPublicArtWorkBySlug(params.workIndex);
+  const slug = typeof params?.workIndex === 'string' ? params.workIndex : '';
+  const work = slug ? getPublicArtWorkBySlug(slug) : null;
 
   if (!work) {
     notFound();
