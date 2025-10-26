@@ -74,19 +74,19 @@ const WorkDots = forwardRef(function WorkDots(
   {
     years,
     ringRefs,          // ref array: 每圈 ring 的 DOM
+    worksByRing,
     isYear,            // (y) => boolean
     diamAt,            // (i) => diameter px
     basicAxisDeg,      // 中心軸角度
     baseSize = 10,     // 紅點基礎尺寸 px
     largeSize = 64,    // 紅點放大尺寸 px
     ringGroupRef,
-    dotsPerRing = 10,
     edgeMarginDeg = 10,
     gapPx = 40,
     centerVoidHalfDeg = 5,
     keepCenter = false,
     hoverSize = 40,
-    href = '/zh/works/public-art/test',         // 目標路由（同分頁跳轉）
+    lang = 'zh',
   },
   apiRef
 ) {
@@ -96,9 +96,10 @@ const WorkDots = forwardRef(function WorkDots(
 
   // 初始化：在每個年份圈掛上紅點（以弧形 transform 定位）
   useEffect(() => {
+    const ringNodes = ringRefs.current.map((ref) => ref?.current ?? null);
+
     // 先清掉上一輪可能殘留的點，避免重複生成
-    ringRefs.current.forEach((r) => {
-      const ringNode = r?.current;
+    ringNodes.forEach((ringNode) => {
       if (!ringNode) return;
       ringNode.querySelectorAll('[data-work-dot="1"]').forEach((n) => n.remove());
     });
@@ -106,10 +107,10 @@ const WorkDots = forwardRef(function WorkDots(
     handlersRef.current = [];
 
     const nRings = years.length - 1; // 不含 CENTER
-    ringRefs.current.forEach((r, i) => {
-      const ringNode = r?.current;
+    ringNodes.forEach((ringNode, i) => {
       const y = years[i];
-      if (!ringNode || !isYear(y)) {
+      const worksForRing = Array.isArray(worksByRing?.[i]) ? worksByRing[i] : [];
+      if (!ringNode || !isYear(y) || worksForRing.length === 0) {
         workDotsGroupRef.current[i] = [];
         handlersRef.current[i] = [];
         return;
@@ -127,8 +128,12 @@ const WorkDots = forwardRef(function WorkDots(
 
       const dots = [];
       const handlers = [];
-      for (let j = 0; j < dotsPerRing; j++) {
-        const angle = minRad + Math.random() * (maxRad - minRad);
+      const totalDots = worksForRing.length;
+      const span = maxRad - minRad;
+      for (let j = 0; j < totalDots; j++) {
+        const work = worksForRing[j];
+        const ratio = totalDots > 0 ? ((j + 0.5) / totalDots) : 0.5;
+        const angle = minRad + span * ratio;
         const dot = document.createElement('div');
         dot.className = 'absolute rounded-full bg-white pointer-events-none transition-all duration-400 ease-in-out';
         dot.style.width = `${baseSize}px`;
@@ -150,6 +155,9 @@ const WorkDots = forwardRef(function WorkDots(
         dot.dataset.baseSize = String(baseSize);
         dot.dataset.state = 'inactive'; // active/inactive
         dot.dataset.hover = '0';        // 0/1
+        dot.dataset.slug = work?.slug ?? '';
+        dot.dataset.year = work?.year ?? '';
+        dot.dataset.title = work?.title ?? '';
 
         setDotAtAngle(dot, angle, radius);
         ringNode.appendChild(dot);
@@ -175,9 +183,12 @@ const WorkDots = forwardRef(function WorkDots(
         // 僅在 active（放大）時才允許路由跳轉
         const triggerClick = () => {
           if (dot.dataset.state !== 'active') return; // 未放大：直接忽略
-          if (href) {
-            try { router.push(href); } catch (_) {}
-          }
+          const slug = dot.dataset.slug;
+          if (!slug) return;
+          const targetLang = lang || 'zh';
+          try {
+            router.push(`/${targetLang}/works/public-art/${slug}`);
+          } catch (_) {}
         };
         const onClick = (e) => {
           e.preventDefault();
@@ -195,6 +206,11 @@ const WorkDots = forwardRef(function WorkDots(
         dot.addEventListener('click', onClick);
         dot.addEventListener('keydown', onKeyDown);
         handlers.push({ onEnter, onLeave, onClick, onKeyDown });
+        dot.setAttribute('role', 'link');
+        const labelParts = [work?.title, work?.year].filter(Boolean);
+        if (labelParts.length) {
+          dot.setAttribute('aria-label', labelParts.join('｜'));
+        }
       }
 
       workDotsGroupRef.current[i] = dots;
@@ -203,8 +219,7 @@ const WorkDots = forwardRef(function WorkDots(
 
     // 清理：移除所有建立的 dots 與事件
     return () => {
-      ringRefs.current.forEach((r, i) => {
-        const ringNode = r?.current;
+      ringNodes.forEach((ringNode, i) => {
         if (!ringNode) return;
         const group = workDotsGroupRef.current[i] || [];
         const handlers = handlersRef.current[i] || [];
@@ -222,7 +237,7 @@ const WorkDots = forwardRef(function WorkDots(
       workDotsGroupRef.current = [];
       handlersRef.current = [];
     };
-  }, [years.length]); // 年份數量改變才重建；其餘參數在 updateRing 使用
+  }, [years, worksByRing, basicAxisDeg, edgeMarginDeg, gapPx, centerVoidHalfDeg, keepCenter, baseSize, largeSize, hoverSize, lang, diamAt, isYear, ringRefs, router]);
 
   // 暴露：每幀對「第 i 圈」做更新（命中則重排，否則沿弧回初始）
   useImperativeHandle(apiRef, () => ({
@@ -276,7 +291,7 @@ const WorkDots = forwardRef(function WorkDots(
         });
       }
     }
-  }), [basicAxisDeg, gapPx, centerVoidHalfDeg, keepCenter, href, baseSize, largeSize, hoverSize]);
+  }), [basicAxisDeg, gapPx, centerVoidHalfDeg, keepCenter, baseSize, largeSize, hoverSize]);
 
   return null; // 純管理者，不渲染 UI
 });
