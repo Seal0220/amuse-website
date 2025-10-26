@@ -231,7 +231,7 @@ export default function AdminWorksPage() {
                             images: v.images.filter((_, i) => i !== idx),
                           }))
                         }
-                        className='absolute top-1 right-1 bg-black/60 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition'
+                        className='absolute top-1 right-1 cursor-pointer bg-black/60 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition'
                         title='刪除圖片'
                       >
                         ✕
