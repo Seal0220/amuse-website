@@ -9,7 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "better-sqlite3": "^12.4.1",
     "framer-motion": "^12.23.24",
     "lodash": "^4.17.21",
     "next": "15.5.4",
