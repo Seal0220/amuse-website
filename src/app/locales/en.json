@@ -27,6 +27,42 @@
     },
     "Footer": {
       "copyright": "Copyright © 2024 Amuse Art and Design. All rights reserved."
+    },
+    "ContactUs": {
+      "title": "Contact Us",
+      "form": {
+        "company": "Company",
+        "person": "Contact name*",
+        "phone": "Phone",
+        "email": "Email*",
+        "address": "Location",
+        "message": "Project details*",
+        "submit": "Send",
+        "submitting": "Sending...",
+        "success": "Thanks! We have received your message and will reply soon.",
+        "error": "Unable to send your message. Please try again."
+      },
+      "info": {
+        "company": {
+          "value": "Amuse Art and Design"
+        },
+        "address": {
+          "label": "Address",
+          "value": "No. 230, Machang Rd., Houli Dist., Taichung City 422003, Taiwan"
+        },
+        "phone": {
+          "label": "Phone",
+          "value": "+886-4-2556-1234"
+        },
+        "email": {
+          "label": "Email",
+          "value": "hello@amuse.tw"
+        },
+        "hours": {
+          "label": "Business Hours",
+          "value": "09:00 – 18:00"
+        }
+      }
     }
   }
 }
