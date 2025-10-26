@@ -16,17 +16,23 @@ export async function GET(_req, ctx) {
 export async function PUT(req, ctx) {
   const { id } = await ctx.params;
   const body = await req.json();
+
   const data = {
-    slug: body.slug.trim(),
-    title: body.title.trim(),
-    medium: body.medium || '',
-    size: body.size || '',
+    slug: String(body.slug || '').trim(),
+    title: JSON.stringify(body.title || { zh: '', en: '' }),
+    medium: JSON.stringify(body.medium || { zh: '', en: '' }),
+    size: JSON.stringify(body.size || { width: '', height: '', length: '' }),
     year: body.year || '',
-    location: body.location || '',
-    management: body.management || '',
-    description: body.description || '',
+    location: JSON.stringify(body.location || { zh: '', en: '' }),
+    management: JSON.stringify(body.management || { zh: '', en: '' }),
+    description: JSON.stringify(body.description || { zh: '', en: '' }),
     images: JSON.stringify(body.images || []),
+    type: body.type === 'exhibition-space' ? 'exhibition-space' : 'public-art',
   };
+
+  if (!data.slug) return new Response('slug required', { status: 400 });
+  if (!JSON.parse(data.title).zh) return new Response('title.zh required', { status: 400 });
+
   const info = updateWorkById(Number(id), data);
   return Response.json({ ok: !!info.changes });
 }

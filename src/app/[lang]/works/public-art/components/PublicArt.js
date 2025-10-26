@@ -1,18 +1,71 @@
 'use client';
-import React, { useRef, useMemo, useEffect } from 'react';
+import React, { useRef, useMemo, useEffect, useState } from 'react';
 import useAnimator from '@/app/hooks/useAnimator';
 import useBreathingNoise from '@/app/hooks/useBreathingNoise';
 import useAxisWobbleRef from '@/app/hooks/useAxisWobble';
-import WorkDots from './components/workDots/WorkDots';
+import WorkDots from './WorkDots';
 
+/**
+ * 動態：一年一軌道、一作一點（public-art）
+ * 年份排序：由舊到新（越新越後面），最後附上 __CENTER__
+ * 其餘動畫／幾何維持原樣
+ */
+export default function PublicArt({ lang = 'zh' }) {
+  const [years, setYears] = useState(['__CENTER__']);           // 例如 ['2018', '2020', ..., '__CENTER__']
+  const [worksByYear, setWorksByYear] = useState([]);           // 例如 [['a','b'], ['c'], ...] 對應 years（不含 CENTER）
 
-export default function PublicArt() {
-  // 含有 __CENTER__ 與 __GAP__
-  const years = useMemo(() => ['2018', '2020', '2022', '2023', '2024', '2025', '__CENTER__',], []);
-  const pageHeight = `${years.length * 75 + years.length * 20}lvh`;
+  // 讀後台資料（直接用 /api/works -> 前端篩 public-art）
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/works', { cache: 'no-store' });
+        if (!res.ok) throw new Error(await res.text());
+        const all = await res.json();
+
+        // 只取 type === 'public-art'
+        const pubs = (all || []).filter(w => (w.type || '') === 'public-art');
+
+        // year 正規化（字串化，空的丟掉）
+        const normalizeYear = (y) => {
+          if (y == null) return null;
+          const s = String(y).trim();
+          return s ? s : null;
+        };
+
+        // 依年份（字串）分組
+        const map = new Map();
+        for (const w of pubs) {
+          const y = normalizeYear(w.year);
+          if (!y) continue;
+          if (!map.has(y)) map.set(y, []);
+          map.get(y).push(w);
+        }
+
+        // 年份排序：由舊到新（越新越後面）
+        const sortedYears = Array.from(map.keys()).sort((a, b) => {
+          const na = parseInt(a, 10), nb = parseInt(b, 10);
+          if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
+          return a.localeCompare(b);
+        });
+
+        // 轉陣列給 WorkDots
+        const grouped = sortedYears.map(y => map.get(y));
+
+        setYears([...sortedYears, '__CENTER__']);
+        setWorksByYear(grouped);
+      } catch (e) {
+        console.error('[PublicArt] load error:', e);
+        setYears(['__CENTER__']);
+        setWorksByYear([]);
+      }
+    })();
+  }, []);
+
+  // ---- 以下維持你原本的動畫／幾何與程式結構 ----
+
+  const pageHeight = `${years.length * 75}lvh`;
   const pageProgress = years.length * 0.75;
 
-  // Refs
   const animatorRef = useRef(null);
   const animator = useAnimator(animatorRef);
 
@@ -52,7 +105,6 @@ export default function PublicArt() {
     if (!animatorRef.current) return;
     animatorRef.current.style.opacity = '1';
 
-    // 動畫
     const rippleAni = animator
       .useAnimation(ringGroupRef)
       .before({ on: 0 }, () => { })
@@ -75,7 +127,6 @@ export default function PublicArt() {
         const waveStartOffset = 0.0;
         const centerProg = progress * (1 - waveStartOffset);
 
-        // 中心呼吸
         if (centerTickRef.current) {
           const centerWave = Math.sin((progress / pageProgress) * Math.PI) ** 1.5;
           const s = 1 + 0.5 * centerWave;
@@ -86,7 +137,6 @@ export default function PublicArt() {
           const node = r.current;
           if (!node) return;
 
-          // 波峰權重（原樣）
           let totalWave = 0;
           let weightSum = 0;
           for (let j = 0; j <= i; j++) {
@@ -107,7 +157,6 @@ export default function PublicArt() {
           node.style.transform = `scale(${scale})`;
           node.style.opacity = String(alpha);
 
-          // 白點沿半徑定位（原樣）
           if (isYear(years[i])) {
             const tick = tickRefs.current[i]?.current;
             if (tick) {
@@ -131,11 +180,8 @@ export default function PublicArt() {
       .after({ on: pageProgress + 0.5 }, () => { });
 
     animator.start();
-
-    return () => {
-      animator.stop();
-    };
-  }, [years.length]);
+    return () => { animator.stop(); };
+  }, [years.length, pageProgress]);
 
   return (
     <div style={{ height: pageHeight }} className='relative w-full bg-neutral-800'>
@@ -149,9 +195,10 @@ export default function PublicArt() {
           ref={ringGroupRef}
           className='absolute scale-50 sm:scale-100 right-[20vw] bottom-[30lvh] flex items-center justify-center transition-all duration-500 ease-out'
         >
-          <div className='h-px ' />
+          <div className='h-px' />
           {years.map((y, i) => {
-            const diam = diamAt(i);
+            const diam = (y === '__CENTER__') ? 0 : diamAt(i);
+            if (y === '__CENTER__') return null;
             return (
               <div
                 key={`${y}-${i}`}
@@ -162,20 +209,22 @@ export default function PublicArt() {
             );
           })}
 
-          {/* 紅點 */}
+          {/* 作品白點（依每年實際作品數量） */}
           <WorkDots
             ref={workDotsRef}
+            lang={lang}
             years={years}
             ringRefs={ringRefs}
             isYear={(y) => !(y === '__CENTER__' || y === '__GAP__')}
             diamAt={diamAt}
-            basicAxisDeg={basicAxisDeg}
+            basicAxisDeg={-150}
             ringGroupRef={ringGroupRef}
-            dotsPerRing={4}
             edgeMarginDeg={10}
             gapPx={96}
             centerVoidHalfDeg={5}
             keepCenter={false}
+            // 新增：傳入每年作品列表（不含 CENTER）
+            worksByYear={worksByYear}
           />
 
           {/* 軸 */}
@@ -187,15 +236,14 @@ export default function PublicArt() {
               transformOrigin: 'center center',
             }}
           >
-
             {/* 射線 */}
             <div
               ref={lineRef}
               className='absolute z-0 h-px bg-white/70 shadow-[0_0_32px_8px] shadow-white/50 '
-              style={{ left: 0, top: 0, width: `${maxDiam * 2}px` }}
+              style={{ left: 0, top: 0, width: '200vw' }}
             />
 
-            {/* 節點 */}
+            {/* 節點（年份刻度與中心） */}
             {years.map((y, i) => {
               if (y === '__CENTER__') {
                 return (
@@ -206,9 +254,6 @@ export default function PublicArt() {
                     style={{ transform: 'translate(-50%, -50%) scale(1)' }}
                   />
                 );
-              }
-              if (y === '__GAP__') {
-                return null;
               }
               return (
                 <div

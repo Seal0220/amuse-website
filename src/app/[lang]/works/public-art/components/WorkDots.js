@@ -3,10 +3,17 @@ import React, { useEffect, useRef, forwardRef, useImperativeHandle } from 'react
 import { deg2rad, normRad, nearestAngle } from '@/app/functions/utils';
 import { useRouter } from 'next/navigation';
 
-// ==== 小工具 ====
+// 在點上定位：點本身做 rotate + translate；label 為點的子元素，抵消旋轉並向下位移
 const setDotAtAngle = (dot, angleRad, radiusPx) => {
+  // 讓點移到弧上的位置
   dot.style.transform =
     `translate(-50%, -50%) rotate(${angleRad}rad) translate(${radiusPx}px, 0)`;
+
+  // 子元素 label：抵消旋轉 + 往「Y 下方」挪動
+  const label = dot.label;
+  if (label) {
+    label.style.transform = `translate(-50%, -50%) rotate(${-angleRad}rad) translate(0, calc(50px))`;
+  }
 };
 
 // 等弧長佈點（固定 gapPx），且「靠中線第一對」對中線也保留等弧長（=gapPx）
@@ -65,28 +72,41 @@ function layoutDots(
   }
 }
 
-/**
- * WorkDots
- * - 建立各圈紅點（初始隨機角度，受 basicAxisDeg 與圈寬/邊緣內縮限制）
- * - 對外暴露 updateRing(i, { atCrestWindow, radius })：在動畫迴圈裡呼叫，命中時重排，離開時還原
- */
+// 取作品標題（title 可能是字串或 {zh,en} JSON 字串/物件）
+const pickTitle = (work, lang = 'zh') => {
+  if (!work) return '';
+  const t = work.title;
+  if (typeof t === 'string') {
+    try {
+      const obj = JSON.parse(t);
+      if (obj && typeof obj === 'object') return obj[lang] || obj.zh || obj.en || Object.values(obj)[0] || (work.slug ?? '');
+      return t;
+    } catch {
+      return t;
+    }
+  }
+  if (t && typeof t === 'object') return t[lang] || t.zh || t.en || Object.values(t)[0] || (work.slug ?? '');
+  return t ?? (work.slug ?? '');
+};
+
 const WorkDots = forwardRef(function WorkDots(
   {
+    lang = 'zh',
     years,
     ringRefs,          // ref array: 每圈 ring 的 DOM
     isYear,            // (y) => boolean
     diamAt,            // (i) => diameter px
     basicAxisDeg,      // 中心軸角度
-    baseSize = 10,     // 紅點基礎尺寸 px
-    largeSize = 64,    // 紅點放大尺寸 px
+    baseSize = 10,     // 白點基礎尺寸 px
+    largeSize = 64,    // 白點放大尺寸 px
     ringGroupRef,
-    dotsPerRing = 10,
     edgeMarginDeg = 10,
     gapPx = 40,
     centerVoidHalfDeg = 5,
     keepCenter = false,
     hoverSize = 40,
-    href = '/zh/works/public-art/test',         // 目標路由（同分頁跳轉）
+    worksByYear = [],  // [[{slug,title}, ...], ...]，索引與 years 一致（非 CENTER）
+    labelOffset = 18,  // 文字相對點中心的向下位移（px）
   },
   apiRef
 ) {
@@ -94,9 +114,8 @@ const WorkDots = forwardRef(function WorkDots(
   const handlersRef = useRef([]);
   const router = useRouter();
 
-  // 初始化：在每個年份圈掛上紅點（以弧形 transform 定位）
   useEffect(() => {
-    // 先清掉上一輪可能殘留的點，避免重複生成
+    // 清掉舊點
     ringRefs.current.forEach((r) => {
       const ringNode = r?.current;
       if (!ringNode) return;
@@ -105,7 +124,9 @@ const WorkDots = forwardRef(function WorkDots(
     workDotsGroupRef.current = [];
     handlersRef.current = [];
 
-    const nRings = years.length - 1; // 不含 CENTER
+    const allYears = years.filter(isYear);
+    const nRings = allYears.length;
+
     ringRefs.current.forEach((r, i) => {
       const ringNode = r?.current;
       const y = years[i];
@@ -116,8 +137,9 @@ const WorkDots = forwardRef(function WorkDots(
       }
       const radius = diamAt(i) / 2;
 
-      // 可分佈扇區：以 basicAxisDeg 為中心，不同圈寬 + 邊緣內縮
-      const d = (nRings - 1) - i;
+      // 可分佈扇區
+      const rankAmongYears = years.slice(0, i + 1).filter(isYear).length - 1;
+      const d = (nRings - 1) - rankAmongYears;
       const totalSpanDegRaw = 360 - (360 / nRings) * d;
       const totalSpanDeg = Math.max(0, totalSpanDegRaw - 2 * edgeMarginDeg);
       const halfSpan = deg2rad(totalSpanDeg / 2);
@@ -125,10 +147,20 @@ const WorkDots = forwardRef(function WorkDots(
       const minRad = centerRad - halfSpan;
       const maxRad = centerRad + halfSpan;
 
+      // 本圈實際作品
+      const works = worksByYear[i] || [];
+      const dotsCount = Math.max(0, works.length);
+
       const dots = [];
       const handlers = [];
-      for (let j = 0; j < dotsPerRing; j++) {
+      for (let j = 0; j < dotsCount; j++) {
+        const work = works[j];
+        const href = work?.slug ? `/${lang}/works/public-art/${encodeURIComponent(work.slug)}` : null;
+        const labelText = pickTitle(work, lang);
+
         const angle = minRad + Math.random() * (maxRad - minRad);
+
+        // ====== dot（父） ======
         const dot = document.createElement('div');
         dot.className = 'absolute rounded-full bg-white pointer-events-none transition-all duration-400 ease-in-out';
         dot.style.width = `${baseSize}px`;
@@ -137,10 +169,8 @@ const WorkDots = forwardRef(function WorkDots(
         dot.style.top = '50%';
         dot.style.willChange = 'transform,width,height';
         dot.style.filter = 'drop-shadow(0 0 12px rgba(255,255,255,0.7))';
-
-        // 互動：為了 hover，需要接收事件；點擊是否生效由 state 判斷
-        dot.style.pointerEvents = 'auto';   // 覆蓋 class 的 pointer-events-none，讓 hover 可用
-        dot.style.cursor = 'default';       // 只有 active 時改成 pointer
+        dot.style.pointerEvents = 'auto';  // 需要 hover 與 click
+        dot.style.cursor = 'default';
         dot.tabIndex = 0;
 
         dot.dataset.workDot = '1';
@@ -150,8 +180,23 @@ const WorkDots = forwardRef(function WorkDots(
         dot.dataset.baseSize = String(baseSize);
         dot.dataset.state = 'inactive'; // active/inactive
         dot.dataset.hover = '0';        // 0/1
+        if (href) dot.dataset.href = href;
 
-        setDotAtAngle(dot, angle, radius);
+        // ====== label（子） ======
+        const label = document.createElement('span');
+        label.textContent = labelText || '';
+        label.className =
+          `absolute text-white/80 text-xs whitespace-nowrap select-none pointer-events-none 
+          opacity-0 transition-all duration-300`;
+        label.style.left = '50%';
+        label.style.top = '50%';
+        label.style.textShadow = '0 0 8px rgba(255,255,255,0.5)';
+
+        dot.appendChild(label);
+        dot.label = label;
+
+        // 定位（點與其子 label）
+        setDotAtAngle(dot, angle, radius, labelOffset);
         ringNode.appendChild(dot);
         dots.push(dot);
 
@@ -163,6 +208,7 @@ const WorkDots = forwardRef(function WorkDots(
           const targetSize = base + hoverSize;
           dot.style.width = `${targetSize}px`;
           dot.style.height = `${targetSize}px`;
+          if (isActive && dot.label) dot.label.style.opacity = '1'; // hover 時若 active，維持亮
         };
         const onLeave = () => {
           dot.dataset.hover = '0';
@@ -170,19 +216,16 @@ const WorkDots = forwardRef(function WorkDots(
           const base = isActive ? largeSize : Number(dot.dataset.baseSize || `${baseSize}`);
           dot.style.width = `${base}px`;
           dot.style.height = `${base}px`;
+          if (dot.label) dot.label.style.opacity = isActive ? '1' : '0'; // 跟著 active 走
         };
-
-        // 僅在 active（放大）時才允許路由跳轉
         const triggerClick = () => {
-          if (dot.dataset.state !== 'active') return; // 未放大：直接忽略
-          if (href) {
-            try { router.push(href); } catch (_) {}
+          if (dot.dataset.state !== 'active') return; // 未放大不跳轉
+          const to = dot.dataset.href;
+          if (to) {
+            try { router.push(to); } catch (_) { }
           }
         };
-        const onClick = (e) => {
-          e.preventDefault();
-          triggerClick();
-        };
+        const onClick = (e) => { e.preventDefault(); triggerClick(); };
         const onKeyDown = (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
@@ -201,7 +244,7 @@ const WorkDots = forwardRef(function WorkDots(
       handlersRef.current[i] = handlers;
     });
 
-    // 清理：移除所有建立的 dots 與事件
+    // 清理
     return () => {
       ringRefs.current.forEach((r, i) => {
         const ringNode = r?.current;
@@ -222,29 +265,26 @@ const WorkDots = forwardRef(function WorkDots(
       workDotsGroupRef.current = [];
       handlersRef.current = [];
     };
-  }, [years.length]); // 年份數量改變才重建；其餘參數在 updateRing 使用
+  }, [lang, years.length, JSON.stringify(worksByYear)]);
 
-  // 暴露：每幀對「第 i 圈」做更新（命中則重排，否則沿弧回初始）
+  // 每幀對「第 i 圈」更新（命中則重排與顯示標籤，否則還原並隱藏標籤）
   useImperativeHandle(apiRef, () => ({
     updateRing(i, { atCrestWindow, radius: radiusOverride }) {
       const workDots = workDotsGroupRef.current[i];
       if (!workDots || !workDots.length) return;
 
-      // 避免 ?? 與 || 混用，順帶處理 NaN
       const parsed = Number(workDots[0]?.dataset.radius ?? '0');
       const radius = (radiusOverride ?? (Number.isFinite(parsed) ? parsed : 0));
 
       if (atCrestWindow) {
-        // 先依規則重排角度（等弧長 + 中線等弧長一次）
         layoutDots(workDots, radius, basicAxisDeg, gapPx, {
           centerVoidHalfDeg,
           keepCenter,
         });
 
-        // 放大（active），允許點擊，游標顯示 pointer
         workDots.forEach(dot => {
           const ang = parseFloat(dot.dataset.curAngle || dot.dataset.baseAngle || '0');
-          setDotAtAngle(dot, ang, radius);
+          setDotAtAngle(dot, ang, radius, labelOffset);
 
           dot.dataset.state = 'active';
           const hovered = dot.dataset.hover === '1';
@@ -254,15 +294,16 @@ const WorkDots = forwardRef(function WorkDots(
           dot.style.height = `${size}px`;
           dot.style.filter = 'drop-shadow(0 0 32px rgba(255,255,255,0.9))';
           dot.style.cursor = 'pointer';
+
+          if (dot.label) dot.label.style.opacity = '1'; // 淡入顯示
         });
       } else {
-        // 縮回（inactive），點擊無效，游標恢復 default
         workDots.forEach((dot) => {
           const baseA = parseFloat(dot.dataset.baseAngle || '0');
           const curA = parseFloat(dot.dataset.curAngle || String(baseA));
           const tgt = nearestAngle(curA, baseA);
           dot.dataset.curAngle = String(tgt);
-          setDotAtAngle(dot, tgt, radius);
+          setDotAtAngle(dot, tgt, radius, labelOffset);
 
           dot.dataset.state = 'inactive';
           const baseSz = Number(dot.dataset.baseSize || String(baseSize));
@@ -273,10 +314,12 @@ const WorkDots = forwardRef(function WorkDots(
           dot.style.height = `${size}px`;
           dot.style.filter = 'drop-shadow(0 0 12px rgba(255,255,255,0.7))';
           dot.style.cursor = 'default';
+
+          if (dot.label) dot.label.style.opacity = '0'; // 淡出
         });
       }
     }
-  }), [basicAxisDeg, gapPx, centerVoidHalfDeg, keepCenter, href, baseSize, largeSize, hoverSize]);
+  }), [basicAxisDeg, gapPx, centerVoidHalfDeg, keepCenter, baseSize, largeSize, hoverSize, labelOffset]);
 
   return null; // 純管理者，不渲染 UI
 });
