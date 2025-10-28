@@ -14,7 +14,7 @@ if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL'); // 安全/效能折衷
 
-// 最小 schema：加入 type 欄位（public-art | exhibition-space）
+// WORKS 表格
 db.exec(`
 CREATE TABLE IF NOT EXISTS works (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,7 +31,56 @@ CREATE TABLE IF NOT EXISTS works (
 );
 `);
 
-// --- 輕量 migration：若舊庫沒有欄位，補上 ---
+// MEMBERS 表格
+db.exec(`
+CREATE TABLE IF NOT EXISTS members (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  name        TEXT NOT NULL,        -- JSON {zh, en}
+  education   TEXT,                 -- JSON {zh, en}
+  specialty   TEXT,                 -- JSON {zh, en}
+  image       TEXT,
+  order_index INTEGER DEFAULT 0,
+  created_at  TEXT DEFAULT CURRENT_TIMESTAMP
+);
+`);
+
+// CONTACT_INFO 表格
+db.exec(`
+CREATE TABLE IF NOT EXISTS contact_info (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  address     TEXT,       -- JSON {zh, en}
+  phone       TEXT,
+  email       TEXT,
+  hours       TEXT,       -- JSON { open: 'HH:mm', close: 'HH:mm' }
+  instagram   TEXT,
+  facebook    TEXT
+);
+`);
+
+// HERO_IMAGES 表格
+db.exec(`
+CREATE TABLE IF NOT EXISTS hero_images (
+  images TEXT NOT NULL DEFAULT '[]'  -- JSON 陣列 ['/hero/2025-10-28-xxxxxx.png', ...]
+);
+`);
+
+// MESSAGES 表格
+db.exec(`
+CREATE TABLE IF NOT EXISTS messages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  company TEXT,
+  name TEXT NOT NULL,
+  phone TEXT,
+  email TEXT NOT NULL,
+  location TEXT,
+  message TEXT NOT NULL,
+  status TEXT DEFAULT '未處理',
+  created_at TEXT DEFAULT (datetime('now', 'localtime'))
+);
+`);
+
+
+// ===== WORKS CRUD =====
 function ensureColumn(name, ddl) {
   const rows = db.prepare(`PRAGMA table_info('works')`).all();
   const has = rows.some(r => r.name === name);
@@ -139,5 +188,97 @@ export function getAdjacentWorks(slug) {
   const nextWork = idx >= 0 && idx < rows.length - 1 ? rows[idx + 1] : null;
   return { prevWork, nextWork };
 }
+
+// ==== MEMBERS CRUD =====
+export function getAllMembers() {
+  return db.prepare(`SELECT * FROM members ORDER BY order_index ASC, id DESC`).all();
+}
+
+export function getMemberById(id) {
+  return db.prepare(`SELECT * FROM members WHERE id = ?`).get(id);
+}
+
+export function addMember(data) {
+  return db.prepare(`
+    INSERT INTO members (name, education, specialty, image, order_index)
+    VALUES (@name, @education, @specialty, @image, @order_index)
+  `).run(data);
+}
+
+export function updateMemberById(id, data) {
+  return db.prepare(`
+    UPDATE members
+    SET name=@name, education=@education, specialty=@specialty, image=@image, order_index=@order_index
+    WHERE id=@id
+  `).run({ ...data, id });
+}
+
+export function deleteMemberById(id) {
+  return db.prepare(`DELETE FROM members WHERE id = ?`).run(id);
+}
+
+// ==== CONTACT_INFO CRUD =====
+export function getContactInfo() {
+  return db.prepare('SELECT * FROM contact_info LIMIT 1').get() || null;
+}
+
+export function updateContactInfo(data) {
+  const existing = db.prepare('SELECT id FROM contact_info LIMIT 1').get();
+
+  if (existing) {
+    return db
+      .prepare(`
+        UPDATE contact_info SET 
+          address = @address,
+          phone = @phone,
+          email = @email,
+          hours = @hours,
+          instagram = @instagram,
+          facebook = @facebook
+        WHERE id = @id
+      `)
+      .run({ ...data, id: existing.id });
+  } else {
+    return db
+      .prepare(`
+        INSERT INTO contact_info 
+          (address, phone, email, hours, instagram, facebook)
+        VALUES (@address, @phone, @email, @hours, @instagram, @facebook)
+      `)
+      .run(data);
+  }
+}
+
+// ==== HERO_IMAGES CRUD =====
+const hasHero = db.prepare('SELECT COUNT(*) as n FROM hero_images').get().n;
+if (hasHero === 0) {
+  db.prepare('INSERT INTO hero_images (images) VALUES (?)').run('[]');
+}
+
+export function getHeroImages() {
+  return db.prepare('SELECT images FROM hero_images LIMIT 1').get();
+}
+
+export function updateHeroImages(images) {
+  return db.prepare('UPDATE hero_images SET images = ?').run(JSON.stringify(images || []));
+}
+
+// ==== MESSAGES CRUD =====
+export function addContactMessage(data) {
+  const stmt = db.prepare(`
+    INSERT INTO messages (company, name, phone, email, location, message)
+    VALUES (@company, @name, @phone, @email, @location, @message)
+  `)
+  stmt.run(data)
+}
+
+export function getAllContactMessages() {
+  return db.prepare(`SELECT * FROM messages ORDER BY created_at DESC`).all()
+}
+
+export function updateContactStatus(id, status) {
+  return db.prepare(`UPDATE messages SET status = ? WHERE id = ?`).run(status, id)
+}
+
 
 export default db;

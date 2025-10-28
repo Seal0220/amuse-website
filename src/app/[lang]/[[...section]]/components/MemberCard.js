@@ -1,5 +1,5 @@
 'use client';
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 /**
  * MemberCard 元件
@@ -18,6 +18,7 @@ const MemberCard = forwardRef(({ name, img, details }, ref) => {
     cardRef.current.setIsShowDetail = (v) => setIsShowDetail(v);
     return cardRef.current;
   });
+
 
   return (
     <div

@@ -1,5 +1,5 @@
 'use client';
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import useLocale from '@/app/hooks/useLocale';
 import useAnimator from '@/app/hooks/useAnimator';
@@ -9,12 +9,40 @@ import Header from '@/app/components/Header';
 import ContactUs from '@/app/components/ContactUs';
 import Typewriter from '@/app/components/Typewriter';
 import MemberCard from './components/MemberCard';
+import HeroImages from './components/HeroImages';
 
 
 export default function HomePage() {
   const { localeDict } = useLocale();
   const locale = localeDict.pages.home;
 
+  // --------- 狀態變數 ----------
+  const [members, setMembers] = useState([]);
+  useLayoutEffect(() => {
+    async function loadMembers() {
+      try {
+        const res = await fetch('/api/members', { cache: 'no-store' });
+        const data = await res.json();
+
+        // 解析 JSON 欄位
+        const parsed = data.map(m => ({
+          id: m.id,
+          name: JSON.parse(m.name || '{}'),
+          education: JSON.parse(m.education || '{}'),
+          specialty: JSON.parse(m.specialty || '{}'),
+          image: m.image,
+        }));
+
+        setMembers(parsed);
+      } catch (err) {
+        console.error('載入成員失敗:', err);
+      }
+    }
+    loadMembers();
+  }, []);
+
+
+  // --------- 參考元素 ----------
   const animatorRef = useRef(null);
   const animator = useAnimator(animatorRef);
 
@@ -28,11 +56,8 @@ export default function HomePage() {
   const aboutUsRef = useRef(null);
 
   const memberGroupRef = useRef(null);
-  const member1Ref = useRef(null);
-  const member2Ref = useRef(null);
-  const member3Ref = useRef(null);
-  const member4Ref = useRef(null);
-  const membersRef = [member1Ref, member2Ref, member3Ref, member4Ref];
+  const membersRef = useRef([]);
+  membersRef.current = members.map((_, i) => membersRef.current[i] ?? React.createRef());
   const memberTypewriter1Ref = useRef(null);
   const memberTitle = ['我們的團隊', '團隊成員'];
 
@@ -144,43 +169,51 @@ export default function HomePage() {
       ele.style.opacity = '0%';
     });
 
-  const membersAni = [...membersRef.map(memberRef => animator.useAnimation(memberRef))];
+  const membersAni = (membersRef.current || []).map(ref => animator.useAnimation(ref));
   const memberGroupAni = animator.useAnimation(memberGroupRef)
     .before({ on: 1 }, (ele) => {
-      membersAni.forEach(memberAni => memberAni.ele.style.scale = 0);
-      membersAni.forEach(memberAni => memberAni.ele.style.opacity = '0%');
-      membersAni.forEach(memberAni => memberAni.ele.style.margin = '0');
-      membersAni.forEach(memberAni => memberAni.ele.setIsShowDetail(false));
+      membersAni.forEach(memberAni => {
+        memberAni.ele.style.scale = 0;
+        memberAni.ele.style.opacity = '0%';
+        memberAni.ele.style.margin = '0';
+        memberAni.ele.setIsShowDetail(false);
+      });
 
       ele.style.transform = 'translateY(75lvh)';
     })
     .when({ on: 1, to: 1.35 }, (ele) => {
       memberTypewriter1Ref.current?.retype(memberTitle[0], 120);
 
-      membersAni.forEach(memberAni => memberAni.ele.style.scale = 0);
-      membersAni.forEach(memberAni => memberAni.ele.style.opacity = '0%');
-      membersAni.forEach(memberAni => memberAni.ele.style.margin = '0');
-      membersAni.forEach(memberAni => memberAni.ele.setIsShowDetail(false));
+      membersAni.forEach(memberAni => {
+        memberAni.ele.style.scale = 0;
+        memberAni.ele.style.opacity = '0%';
+        memberAni.ele.style.margin = '0';
+        memberAni.ele.setIsShowDetail(false);
+      });
 
       ele.style.transform = 'translateY(65lvh)';
     })
     .when({ on: 1.35, to: 1.7 }, (ele) => {
       memberTypewriter1Ref.current?.retype(memberTitle[0], 120);
 
-      membersAni.forEach(memberAni => memberAni.ele.style.scale = 1);
-      membersAni.forEach(memberAni => memberAni.ele.style.opacity = '100%');
-      membersAni.forEach(memberAni => memberAni.ele.style.margin = '0');
-      membersAni.forEach(memberAni => memberAni.ele.setIsShowDetail(false));
+      membersAni.forEach(memberAni => {
+        memberAni.ele.style.scale = 1;
+        memberAni.ele.style.opacity = '100%';
+        memberAni.ele.style.margin = '0';
+        memberAni.ele.setIsShowDetail(false);
+      });
 
       ele.style.transform = 'translateY(65lvh)';
     })
     .when({ on: 1.7, to: 2.5 }, (ele) => {
       memberTypewriter1Ref.current?.retype(memberTitle[1], 120);
 
-      membersAni.forEach(memberAni => memberAni.ele.style.scale = 1);
-      membersAni.forEach(memberAni => memberAni.ele.style.opacity = '100%');
-      membersAni.forEach(memberAni => memberAni.ele.style.margin = '0 2rem 0 2rem');
-      membersAni.forEach(memberAni => memberAni.ele.setIsShowDetail(true));
+      membersAni.forEach(memberAni => {
+        memberAni.ele.style.scale = 1;
+        memberAni.ele.style.opacity = '100%';
+        memberAni.ele.style.margin = '0 2rem 0 2rem';
+        memberAni.ele.setIsShowDetail(true);
+      });
 
       ele.style.transform = 'translateY(50lvh)';
     })
@@ -190,28 +223,38 @@ export default function HomePage() {
   const circlesAni = [...circlesRef.map(circleRef => animator.useAnimation(circleRef))];
   const circleGroupAni = animator.useAnimation(circleGroupRef)
     .before({ on: 0.15 }, (ele) => {
-      circlesAni.forEach(circleAni => circleAni.ele.style.scale = 0);
-      circlesAni.forEach(circleAni => circleAni.ele.style.transform = 'translate(0, 0)');
+      circlesAni.forEach(circleAni => {
+        circleAni.ele.style.scale = 0;
+        circleAni.ele.style.transform = 'translate(0, 0)';
+      });
       ele.style.opacity = '0%';
     })
     .when({ on: 0.15, to: 0.75 }, (ele) => {
-      circlesAni.forEach(circleAni => circleAni.ele.style.scale = 1);
-      circlesAni.forEach(circleAni => circleAni.ele.style.transform = 'translate(0, 0)');
+      circlesAni.forEach(circleAni => {
+        circleAni.ele.style.scale = 1;
+        circleAni.ele.style.transform = 'translate(0, 0)';
+      });
       ele.style.opacity = '100%';
     })
     .when({ on: 0.75, to: 1.35 }, (ele) => {
-      circlesAni.forEach(circleAni => circleAni.ele.style.scale = 1.2);
-      circlesAni.forEach(circleAni => circleAni.ele.style.transform = 'translate(0, 0)');
+      circlesAni.forEach(circleAni => {
+        circleAni.ele.style.scale = 1.2;
+        circleAni.ele.style.transform = 'translate(0, 0)';
+      });
       ele.style.opacity = '100%';
     })
     .when({ on: 1.35, to: 1.7 }, (ele) => {
-      circlesAni.forEach(circleAni => circleAni.ele.style.scale = 1.4);
-      circlesAni.forEach(circleAni => circleAni.ele.style.transform = 'translate(0, 0)');
+      circlesAni.forEach(circleAni => {
+        circleAni.ele.style.scale = 1.4;
+        circleAni.ele.style.transform = 'translate(0, 0)';
+      });
       ele.style.opacity = '100%';
     })
     .when({ on: 1.7, to: 2.5 }, (ele) => {
-      circlesAni.forEach(circleAni => circleAni.ele.style.scale = 2);
-      circlesAni.forEach(circleAni => circleAni.ele.style.transform = 'translate(-23vw, 30lvh)');
+      circlesAni.forEach(circleAni => {
+        circleAni.ele.style.scale = 2;
+        circleAni.ele.style.transform = 'translate(-23vw, 30lvh)';
+      });
       ele.style.opacity = '70%';
     })
     .after({ on: 2.5 }, (ele) => {
@@ -220,25 +263,16 @@ export default function HomePage() {
 
   return (
     <main ref={animatorRef} className='relative w-full min-h-[400lvh] text-white flex flex-col'>
-      <Header />
-
       {/* 封面 */}
       <section className='min-h-[200lvh]'>
-        <div
+        {/* <div
           ref={indexRef}
           className='fixed -z-10 w-full h-lvh translate-y-0 flex items-center justify-center bg-gray-300 overflow-hidden transition ease-in-out duration-500'
         >
           <img src='/banner-test.png' className='min-w-full min-h-full object-cover select-none' />
-
-          {/* Nav 2 */}
-          <div className='absolute flex items-center justify-center p-12 pt-18 box-border bottom-0 w-full h-20 bg-gradient-to-t from-5% from-neutral-900 via-70% via-neutral-900/70 to-100% to-transparent'>
-            <div className='flex flex-row gap-6'>
-              <img src='/ig-logo.png' className='size-8' />
-              <img src='/fb-logo.png' className='size-8' />
-            </div>
-            {/* <div className='text-xs select-none'>Copyright © 2024 amuse art and design 阿木司設計 All right reserved.</div> */}
-          </div>
-        </div>
+          <div className='absolute flex items-center justify-center p-12 pt-18 box-border bottom-0 w-full h-20 bg-gradient-to-t from-5% from-neutral-900 via-70% via-neutral-900/70 to-100% to-transparent' />
+        </div> */}
+        <HeroImages indexRef={indexRef} />
       </section>
 
 
@@ -290,7 +324,7 @@ export default function HomePage() {
             />
           </h1>
           <p className='text-gray-400 max-w-2xl leading-relaxed'>{locale.description}</p>
-          
+
           <div className='absolute -top-20 w-full h-20 bg-gradient-to-t from-5% from-neutral-950 via-50% via-neutral-950/70 to-100% to-transparent' />
 
           <div
@@ -299,38 +333,18 @@ export default function HomePage() {
             className='absolute z-6 top-0 transition ease-in-out duration-700'
           >
             <div className='flex flex-row justify-center items-center gap-32'>
-
-              <MemberCard
-                ref={member1Ref}
-                name="林建佑"
-                img="/members/01.jpg"
-                details={{ education: '藝術大學 美術學系', specialty: '雕塑、公共藝術' }}
-                showDetail={true}
-              />
-
-              <MemberCard
-                ref={member2Ref}
-                name="林建佑"
-                img="/members/02.jpg"
-                details={{ education: '藝術大學 美術學系', specialty: '雕塑、公共藝術' }}
-                showDetail={true}
-              />
-
-              <MemberCard
-                ref={member3Ref}
-                name="林建佑"
-                img="/members/03.jpg"
-                details={{ education: '藝術大學 美術學系', specialty: '雕塑、公共藝術' }}
-                showDetail={true}
-              />
-
-              <MemberCard
-                ref={member4Ref}
-                name="林建佑"
-                img="/members/04.jpg"
-                details={{ education: '藝術大學 美術學系', specialty: '雕塑、公共藝術' }}
-                showDetail={true}
-              />
+              {members.map((member, i) => (
+                <MemberCard
+                  key={member?.id}
+                  ref={membersRef.current[i]}
+                  name={member?.name.zh || member?.name.en || '(未命名)'}
+                  img={member?.image || '/members/default.jpg'}
+                  details={{
+                    education: member?.education.zh || member?.education.en || '',
+                    specialty: member?.specialty.zh || member?.specialty.en || '',
+                  }}
+                />
+              ))}
             </div>
           </div>
 
@@ -349,7 +363,7 @@ export default function HomePage() {
       </section>
 
       {/* 聯絡我們 */}
-      <section ref={contactUsRef} className='bottom-0 mt-auto'>
+      <section ref={contactUsRef} className='bottom-0 mt-auto z-20'>
         <ContactUs />
       </section>
     </main>

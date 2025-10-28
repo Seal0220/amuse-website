@@ -41,7 +41,10 @@ export default function Header() {
     <header className='fixed top-0 w-lvw z-[100] text-white bg-gradient-to-b from-black/80 via-black/40 to-transparent overflow-hidden'>
       <div className='mx-auto flex flex-row gap-10 items-center justify-between px-8 py-6'>
         {/* LOGO */}
-        <div className='flex items-center'>
+        <div 
+        className='flex items-center hover:-translate-y-1 cursor-pointer transition-all duration-300 ease-in-out'
+        onClick={() => {router.replace(`/${lang}`);}}
+        >
           <img
             src='/Amuse-LOGO-w.png'
             alt={locale.company_name}
@@ -55,18 +58,18 @@ export default function Header() {
         <nav className='flex flex-row gap-10'>
           <div className='flex flex-row gap-20 text-lg tracking-wide items-center'>
             {/* 這三個在動畫頁用同頁切換，不在動畫頁就真跳轉 */}
-            <a href={`/${lang}`} onClick={(e) => navigateSamePage(e, 'home')} className='hover:text-gray-300 text-nowrap'>
+            <a href={`/${lang}`} onClick={(e) => navigateSamePage(e, 'home')} className='hover:text-gray-300 text-shadow-white hover:text-shadow-[0_0_24px] hover:-translate-y-1 text-nowrap transition-all duration-300 ease-in-out'>
               {locale.home}
             </a>
-            <a href={`/${lang}/team`} onClick={(e) => navigateSamePage(e, 'team')} className='hover:text-gray-300 text-nowrap'>
+            <a href={`/${lang}/team`} onClick={(e) => navigateSamePage(e, 'team')} className='hover:text-gray-300 text-shadow-white hover:text-shadow-[0_0_24px] hover:-translate-y-1 text-nowrap transition-all duration-300 ease-in-out'>
               {locale.team}
             </a>
-            <a href={`/${lang}/contact`} onClick={(e) => navigateSamePage(e, 'contact')} className='hover:text-gray-300 text-nowrap'>
+            <a href={`/${lang}/contact`} onClick={(e) => navigateSamePage(e, 'contact')} className='hover:text-gray-300 text-shadow-white hover:text-shadow-[0_0_24px] hover:-translate-y-1 text-nowrap transition-all duration-300 ease-in-out'>
               {locale.contact}
             </a>
 
             {/* works 保留 Link（本來就是獨立頁） */}
-            <Link href={`/${lang}/works`} className='hover:text-gray-300 text-nowrap'>
+            <Link href={`/${lang}/works`} className='hover:text-gray-300 text-shadow-white hover:text-shadow-[0_0_24px] hover:-translate-y-1 text-nowrap transition-all duration-300 ease-in-out'>
               {locale.works}
             </Link>
           </div>

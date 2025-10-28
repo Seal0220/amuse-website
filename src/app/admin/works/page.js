@@ -195,7 +195,7 @@ export default function AdminWorksPage() {
 
   // === 介面 ===
   return (
-    <div className='min-h-lvh pt-32 bg-neutral-950 text-white'>
+    <div className='bg-neutral-950 text-white'>
       <div className='flex min-h-lvh border-t border-white/15'>
         {/* 左側清單 */}
         <aside className='w-1/4 border-r border-white/15 p-4 flex flex-col'>
@@ -203,7 +203,7 @@ export default function AdminWorksPage() {
             <h1 className='text-xl font-bold'>作品列表</h1>
             <div
               onClick={() => selectWork(null)}
-              className='px-2 py-1 text-sm bg-white/10 hover:bg-white/20 rounded cursor-pointer'
+              className='px-2 py-1 text-sm bg-white/10 hover:bg-white/20 rounded cursor-pointer transition-all duration-100 ease-in-out'
             >
               + 新增
             </div>
@@ -214,12 +214,38 @@ export default function AdminWorksPage() {
           ) : works.length === 0 ? (
             <div className='opacity-70 text-sm'>目前沒有資料</div>
           ) : (
-            <div className='overflow-y-auto space-y-8'>
+            <div className='overflow-y-auto space-y-12'>
               {/* 公共藝術 */}
               <div>
-                <div className='text-sm font-semibold text-white/70 mb-2 border-b border-white/15 pb-1'>
-                  公共藝術（Public Art）
+                {/* 公共藝術標題＋Hero 圖預覽與上傳 */}
+                <div className='flex items-center justify-between mb-2 border-b border-white/15 pb-2'>
+                  <div className='flex items-center gap-3'>
+                    <img
+                      src='/types/public-art_hero.jpg'
+                      alt='公共藝術封面'
+                      className='size-20 object-cover rounded-full border border-white/10'
+                    />
+                    <span className='text-sm font-semibold text-white/70'>公共藝術</span>
+                  </div>
+                  <label className='text-xs px-2 py-1 bg-white/10 hover:bg-white/20 rounded cursor-pointer transition-all duration-100 ease-in-out'>
+                    更改圖片
+                    <input
+                      type='file'
+                      accept='image/*'
+                      className='hidden'
+                      onChange={async e => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const fd = new FormData();
+                        fd.append('file', file);
+                        fd.append('type', 'public-art');
+                        await fetch('/api/works/types/hero', { method: 'POST', body: fd });
+                        location.reload();
+                      }}
+                    />
+                  </label>
                 </div>
+                {/* 公共藝術作品列表 */}
                 <ul className='space-y-1'>
                   {works
                     .filter(w => (w.type || 'public-art') === 'public-art')
@@ -232,7 +258,7 @@ export default function AdminWorksPage() {
                         <li key={w.id}>
                           <div
                             onClick={() => selectWork(w)}
-                            className={`w-full text-left px-3 py-2 rounded cursor-pointer ${selected && selected.id === w.id && !selected.isNew
+                            className={`w-full text-left px-3 py-2 rounded cursor-pointer transition-all duration-100 ease-in-out ${selected && selected.id === w.id && !selected.isNew
                               ? 'bg-white/20'
                               : 'hover:bg-white/10'
                               }`}
@@ -257,9 +283,35 @@ export default function AdminWorksPage() {
 
               {/* 展示空間 */}
               <div>
-                <div className='text-sm font-semibold text-white/70 mb-2 border-b border-white/15 pb-1'>
-                  展示空間（Exhibition Space）
+                {/* 展示空間標題＋Hero 圖預覽與上傳 */}
+                <div className='flex items-center justify-between mb-2 border-b border-white/15 pb-2'>
+                  <div className='flex items-center gap-3'>
+                    <img
+                      src='/types/exhibition-space_hero.jpg'
+                      alt='展示空間封面'
+                      className='size-20 object-cover rounded-full border border-white/10'
+                    />
+                    <span className='text-sm font-semibold text-white/70'>展示空間</span>
+                  </div>
+                  <label className='text-xs px-2 py-1 bg-white/10 hover:bg-white/20 rounded cursor-pointer transition-all duration-100 ease-in-out'>
+                    更改圖片
+                    <input
+                      type='file'
+                      accept='image/*'
+                      className='hidden'
+                      onChange={async e => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const fd = new FormData();
+                        fd.append('file', file);
+                        fd.append('type', 'exhibition-space');
+                        await fetch('/api/works/types/hero', { method: 'POST', body: fd });
+                        location.reload();
+                      }}
+                    />
+                  </label>
                 </div>
+                {/* 展示空間作品列表 */}
                 <ul className='space-y-1'>
                   {works
                     .filter(w => (w.type || 'public-art') === 'exhibition-space')
@@ -272,7 +324,7 @@ export default function AdminWorksPage() {
                         <li key={w.id}>
                           <div
                             onClick={() => selectWork(w)}
-                            className={`w-full text-left px-3 py-2 rounded cursor-pointer ${selected && selected.id === w.id && !selected.isNew
+                            className={`w-full text-left px-3 py-2 rounded cursor-pointer transition-all duration-100 ease-in-out ${selected && selected.id === w.id && !selected.isNew
                               ? 'bg-white/20'
                               : 'hover:bg-white/10'
                               }`}
@@ -498,7 +550,7 @@ export default function AdminWorksPage() {
                 <button
                   type='submit'
                   disabled={saving}
-                  className={`px-4 py-2 rounded ${saving
+                  className={`px-4 py-2 rounded transition-all duration-100 ease-in-out ${saving
                     ? 'bg-white/5 text-white/40 cursor-not-allowed'
                     : 'bg-white/10 hover:bg-white/20 cursor-pointer'
                     }`}
@@ -512,14 +564,14 @@ export default function AdminWorksPage() {
                 {!selected.isNew && (
                   <div
                     onClick={handleDelete}
-                    className='px-4 py-2 rounded bg-red-600/80 hover:bg-red-600 cursor-pointer'
+                    className='px-4 py-2 rounded bg-red-600/80 hover:bg-red-600 cursor-pointer transition-all duration-100 ease-in-out'
                   >
                     刪除
                   </div>
                 )}
                 <div
                   onClick={() => setSelected(null)}
-                  className='px-4 py-2 rounded bg-white/10 hover:bg-white/20 cursor-pointer'
+                  className='px-4 py-2 rounded bg-white/10 hover:bg-white/20 cursor-pointer transition-all duration-100 ease-in-out'
                 >
                   取消
                 </div>

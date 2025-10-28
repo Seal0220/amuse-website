@@ -26,6 +26,7 @@ export default function WorkPage() {
         let particles = [];
 
         const url1 = '/zh/works/exhibition-space', url2 = '/zh/works/public-art';
+        const imgSlug1 = '/types/exhibition-space_hero.jpg', imgSlug2 = '/types/public-art_hero.jpg';
         let planets = [];
 
 
@@ -46,7 +47,7 @@ export default function WorkPage() {
             p.frameRate(120);
 
             p.loadImage(
-              'http://localhost:4001/members/02.jpg',
+              imgSlug1,
               (img) => {
                 img1 = img;
                 checkReady();
@@ -55,7 +56,7 @@ export default function WorkPage() {
             );
 
             p.loadImage(
-              'http://localhost:4001/members/03.jpg',
+              imgSlug2,
               (img) => {
                 img2 = img;
                 checkReady();

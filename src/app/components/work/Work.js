@@ -1,7 +1,10 @@
 'use client';
 import ImageSlider from '@/app/components/work/ImageSlider';
+import { useRouter } from 'next/navigation';
+import { IoIosArrowBack } from "react-icons/io";
 
-export default function Work({ lang, work, prevWork, nextWork }) {
+export default function Work({ lang, work, type }) {
+  const router = useRouter();
   const { images, title, year, location, medium, management, description, size = {} } = work;
 
   return (
@@ -18,6 +21,17 @@ export default function Work({ lang, work, prevWork, nextWork }) {
         <div className='relative w-full bg-neutral-950 flex-1 flex flex-col gap-10 items-center'>
           {/* 頂部線 */}
           <div className='sticky z-50 w-full top-0 left-0 flex items-center justify-center bg-neutral-950 pt-32'>
+            {/* 返回 */}
+            <div 
+            className='absolute flex flex-row gap-2 items-center bg-neutral-800 z-51 px-4 py-2 rounded-full border-2 border-white/30 mr-[40%] select-none cursor-pointer translate-y-0 hover:-translate-y-1 shadow-[0_0_12px_4px] hover:shadow-[0_0_24px_12px] shadow-white/15 transition-all duration-300 ease-in-out'
+            onClick={() => {router.replace(`/zh/works/${type}`);}}
+            >
+              <IoIosArrowBack className='mt-0.5'/>
+              {/* <span className='text-sm'>返回</span> */}
+              <span className='font-bold'>{type === 'public-art' ? '公共藝術' : '展覽空間'}</span>
+              <span className='text-sm'>作品列表</span>
+            </div>
+
             <div className='relative h-0.5 w-full bg-gradient-to-r from-transparent via-white to-transparent'></div>
           </div>
 
