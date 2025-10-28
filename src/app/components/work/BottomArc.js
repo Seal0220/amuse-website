@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function BottomArcP5({ lang, prevWork, nextWork }) {
+export default function BottomArc({ lang, prevWork, nextWork, type }) {
   const canvasHostRef = useRef(null);
   const router = useRouter();
 
@@ -44,19 +44,19 @@ export default function BottomArcP5({ lang, prevWork, nextWork }) {
           W = w * 1.12;
           H = 2 * (0.9 * visual - cy);
 
-          pos.left   = onEllipse(atAngle(0.30));
+          pos.left = onEllipse(atAngle(0.30));
           pos.center = onEllipse(sk.HALF_PI);
-          pos.right  = onEllipse(atAngle(0.70));
+          pos.right = onEllipse(atAngle(0.70));
         };
 
         const tryDispatchFadeOut = () => {
-          try { window.dispatchEvent(new CustomEvent('work:fadeOut')); } catch {}
+          try { window.dispatchEvent(new CustomEvent('work:fadeOut')); } catch { }
         };
 
         const go = (slug) => {
           tryDispatchFadeOut();        // 先淡出
           setTimeout(() => {
-            router.push(`/${lang}/works/public-art/${slug}`);
+            router.push(`/${lang}/works/${type}/${slug}`);
           }, 150);                     // 再導頁，新內容在 Crossfade 中淡入
         };
 
@@ -160,7 +160,7 @@ export default function BottomArcP5({ lang, prevWork, nextWork }) {
           // 導航球（放大＋變亮）
           const drawNavBall = (p, amt) => {
             const radius = sk.lerp(24, 30, amt);   // 半徑放大
-            const alpha  = sk.lerp(100, 220, amt); // 亮度提升
+            const alpha = sk.lerp(100, 220, amt); // 亮度提升
             sk.noStroke();
             sk.fill(255, alpha);
             sk.circle(p.x, p.y, radius);
@@ -198,7 +198,7 @@ export default function BottomArcP5({ lang, prevWork, nextWork }) {
       });
 
       cleanup = () => {
-        try { p5Instance?.remove(); } catch {}
+        try { p5Instance?.remove(); } catch { }
       };
     })();
 
@@ -208,7 +208,7 @@ export default function BottomArcP5({ lang, prevWork, nextWork }) {
   return (
     <div
       ref={canvasHostRef}
-      className="absolute bottom-0 left-0 w-full h-full pointer-events-auto overflow-hidden"
+      className='absolute bottom-0 left-0 w-full h-full pointer-events-auto overflow-hidden'
     />
   );
 }

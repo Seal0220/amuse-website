@@ -96,22 +96,43 @@ export default function WorkPage() {
 
 
           // 黑洞漸層
+          // 單一繪製（一次 fill），用 Canvas 的徑向漸層避免多個同心圓疊加
           const drawBlackHole = (cx, cy, holeR, scale = 1.0) => {
-            const ease = (t) => 0.5 - 0.5 * Math.cos(Math.PI * t);
+            const ctx = p.drawingContext;
 
-            p.push();           // 保護座標系
+            p.push();
             p.translate(cx, cy);
-            p.scale(scale);     // 放大縮小整個黑洞
+            p.scale(scale);
             p.translate(-cx, -cy);
 
-            for (let i = 0; i <= 220; i++) {
-              const t = i / 220;
-              const alpha = t < 0.5 ? 255 : 255 * (1 - ease(t));
-              p.fill(0, alpha);
-              p.ellipse(cx, cy, holeR * 2 * t);
+            // 外緣半徑（可依需求調整光暈範圍）
+            const R = holeR * 1;
+
+            // 建立徑向漸層：中心到外緣
+            const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
+
+            // 目標曲線：0~0.3 維持全黑（alpha=1），之後用 cos-ease 淡出至 0
+            const threshold = 0.5;
+            const alphaAt = (t) => {
+              if (t <= threshold) return 1;
+              const u = (t - threshold) / (1 - threshold); // 映射到 0~1
+              return 0.5 * (1 + Math.cos(Math.PI * u)); // 由 1 緩降到 0
+            };
+
+            // 以多個 color stop 近似連續曲線（單次填色，非多圓疊加）
+            const N = 16; // 調高可更平滑
+            for (let i = 0; i <= N; i++) {
+              const t = i / N;                   // 0~1 的半徑比例
+              const a = alphaAt(t);              // 對應 alpha
+              grad.addColorStop(t, `rgba(0,0,0,${a})`);
             }
 
-            p.pop();            // 還原變換
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(cx, cy, R, 0, Math.PI * 2);
+            ctx.fill();
+
+            p.pop();
           };
 
 
@@ -208,49 +229,71 @@ export default function WorkPage() {
           };
 
 
+          // 粒子生成於整個螢幕 + margin；一路朝黑洞中心移動
+          // 僅在「正中心附近」才消失（不是一進入黑洞就消失）
+          // 並在接近中心的最後一段距離才做淡出
           const updateParticles = (cx, cy, baseScale, holeR) => {
-            // --- 隨機生成新粒子 ---
-            if (p.random() < 0.2) { // 控制發射頻率
-              // 在黑洞範圍內取一個隨機起點（均勻分佈）
-              const angle0 = p.random(p.TWO_PI);
-              const radius0 = Math.sqrt(p.random()) * (holeR * baseScale * 0.8); // sqrt 讓分佈均勻於面積
-              const startX = cx + radius0 * Math.cos(angle0);
-              const startY = cy + radius0 * Math.sin(angle0);
+            const w = p.width, h = p.height;
+            const margin = 50 * baseScale;
+            const rate = 0.25; // 生成機率
 
-              // 出射方向：朝圓心外放
-              const dir = p.createVector(startX - cx, startY - cy).normalize();
-              const speed = p.random(0.6, 1.6) * baseScale;
+            // 只在「非常靠近中心」才移除
+            const centerKillR = Math.max(4, holeR * baseScale * 0.12);   // 進入這個半徑才消失（很小）
+            const fadeStartR = Math.max(centerKillR * 1.5, holeR * baseScale * 0.55); // 從這半徑開始淡出
+
+            // 生成：全畫面 + margin 均勻生成，方向指向中心
+            if (p.random() < rate) {
+              const startX = p.random(margin, w - margin);
+              const startY = p.random(margin, h - margin);
+              const dir = p.createVector(cx - startX, cy - startY).normalize();
+              const speed = p.random(0.8, 1.8) * baseScale;
 
               particles.push({
                 x: startX,
                 y: startY,
                 vx: dir.x * speed,
                 vy: dir.y * speed,
-                life: p.random(60, 120),
+                life: p.random(220, 500),            // 後備壽命（避免永生）
                 r: p.random(2, 4) * baseScale,
-                alpha: 255,
               });
+
+              if (particles.length > 2000) particles.shift();
             }
 
-            // --- 更新與繪製粒子 ---
+            // 更新 & 繪製
             for (let i = particles.length - 1; i >= 0; i--) {
               const pt = particles[i];
               pt.x += pt.vx;
               pt.y += pt.vy;
               pt.life -= 1;
-              pt.alpha = p.map(pt.life, 0, 120, 0, 255);
 
-              // 微微閃爍
+              const d = p.dist(pt.x, pt.y, cx, cy);
+
+              // 到正中心附近才消失（或壽命用盡）
+              if (d <= centerKillR || pt.life <= 0) {
+                particles.splice(i, 1);
+                continue;
+              }
+
+              // 只有在接近中心（fadeStartR -> centerKillR）才開始淡出
+              let alpha = 255;
+              if (d < fadeStartR) {
+                const u = p.constrain((d - centerKillR) / (fadeStartR - centerKillR), 0, 1);
+                // u=1 在 fadeStartR；u=0 在 centerKillR
+                // 使用 cos-ease：邊緣亮、靠近中心急速變暗
+                alpha = 255 * (0.5 * (1 + Math.cos(Math.PI * (1 - u))));
+              }
+
+              // 微閃爍
               const flicker = p.noise(pt.x * 0.05, pt.y * 0.05, p.frameCount * 0.05);
               const brightness = p.map(flicker, 0, 1, 180, 255);
 
               p.noStroke();
-              p.fill(brightness, brightness, brightness, pt.alpha);
+              p.fill(brightness, brightness, brightness, alpha);
               p.ellipse(pt.x, pt.y, pt.r);
-
-              if (pt.life <= 0) particles.splice(i, 1);
             }
           };
+
 
 
 

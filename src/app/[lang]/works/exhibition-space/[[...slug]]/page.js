@@ -3,20 +3,20 @@ import { notFound } from 'next/navigation';
 import { getWorkBySlug, getAdjacentWorks } from '@/lib/db';
 import Work from '@/app/components/work/Work';
 import BottomArc from '../../../../components/work/BottomArc';
-import PublicArt from '../components/PublicArt';
+import ExhibitionSpace from '../components/ExhibitionSpace';
 import Crossfade from '@/app/components/Crossfade';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function PublicArtPage({ params }) {
+export default async function ExhibitionSpacePage({ params }) {
   const { lang, slug } = await params;
   const currentSlug = Array.isArray(slug) ? slug[0] : slug ?? null;
 
   // 無 slug：顯示 PublicArt
   if (!currentSlug) {
-    return <PublicArt />;
+    return <ExhibitionSpace />;
   }
 
   // 有 slug：伺服端直查 DB
@@ -36,7 +36,7 @@ export default async function PublicArtPage({ params }) {
 
       {/* 底部弧線／球（Client） */}
       <div className='relative h-80 mb-20'>
-        <BottomArc lang={lang} prevWork={prevWork} nextWork={nextWork} type={'public-art'} />
+        <BottomArc lang={lang} prevWork={prevWork} nextWork={nextWork} type={'exhibition-space'} />
       </div>
     </div>
   );

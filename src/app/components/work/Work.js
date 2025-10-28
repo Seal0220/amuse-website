@@ -1,5 +1,5 @@
 'use client';
-import ImageSlider from '@/app/[lang]/works/public-art/[[...slug]]/components/ImageSlider';
+import ImageSlider from '@/app/components/work/ImageSlider';
 
 export default function Work({ lang, work, prevWork, nextWork }) {
   const { images, title, year, location, medium, management, description, size = {} } = work;

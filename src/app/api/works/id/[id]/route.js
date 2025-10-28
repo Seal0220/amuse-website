@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { getWorkById, updateWorkById, deleteWorkById } from '@/lib/db';
 
 export const runtime = 'nodejs';
@@ -32,6 +34,23 @@ export async function PUT(req, ctx) {
 
   if (!data.slug) return new Response('slug required', { status: 400 });
   if (!JSON.parse(data.title).zh) return new Response('title.zh required', { status: 400 });
+
+  // === 刪除舊圖片（保留目前 images 中的） ===
+  try {
+    const publicDir = path.join(process.cwd(), 'public');
+    const workDir = path.join(publicDir, 'works', data.slug);
+    if (fs.existsSync(workDir)) {
+      const keepList = (body.images || []).map(img => path.basename(img));
+      const allFiles = fs.readdirSync(workDir);
+      for (const file of allFiles) {
+        if (!keepList.includes(file)) {
+          fs.unlinkSync(path.join(workDir, file));
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Failed to clean old images:', err);
+  }
 
   const info = updateWorkById(Number(id), data);
   return Response.json({ ok: !!info.changes });

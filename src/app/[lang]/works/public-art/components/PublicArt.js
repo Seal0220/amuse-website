@@ -18,12 +18,12 @@ export default function PublicArt({ lang = 'zh' }) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch('/api/works', { cache: 'no-store' });
+        const res = await fetch('/api/works?type=public-art', { cache: 'no-store' });
         if (!res.ok) throw new Error(await res.text());
-        const all = await res.json();
+        const pubs = await res.json();
 
         // 只取 type === 'public-art'
-        const pubs = (all || []).filter(w => (w.type || '') === 'public-art');
+        // const pubs = (all || []).filter(w => (w.type || '') === 'public-art');
 
         // year 正規化（字串化，空的丟掉）
         const normalizeYear = (y) => {
@@ -60,8 +60,6 @@ export default function PublicArt({ lang = 'zh' }) {
       }
     })();
   }, []);
-
-  // ---- 以下維持你原本的動畫／幾何與程式結構 ----
 
   const pageHeight = `${years.length * 75}lvh`;
   const pageProgress = years.length * 0.75;
@@ -184,7 +182,7 @@ export default function PublicArt({ lang = 'zh' }) {
   }, [years.length, pageProgress]);
 
   return (
-    <div style={{ height: pageHeight }} className='relative w-full bg-neutral-800'>
+    <div style={{ height: pageHeight }} className='min-h-lvh relative w-full bg-neutral-800'>
       <div
         ref={animatorRef}
         style={{ opacity: 0 }}
