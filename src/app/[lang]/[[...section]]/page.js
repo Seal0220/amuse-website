@@ -46,6 +46,8 @@ export default function HomePage() {
     loadMembers();
   }, []);
 
+  useEffect(() => console.log(memberTitles), [memberTitles]);
+
 
   // --------- 參考元素 ----------
   const animatorRef = useRef(null);
@@ -297,6 +299,7 @@ export default function HomePage() {
       >
         <Typewriter
           ref={infoTypewriter1Ref}
+          contentKey={introLocale?.headline ?? currentLocale}
           content={(<p>{introLocale?.headline}</p>)}
           speed={50}
           className='flex flex-col gap-4 drop-shadow-md drop-shadow-white/70 font-extrabold'
@@ -308,6 +311,7 @@ export default function HomePage() {
         >
           <Typewriter
             ref={infoTypewriter2Ref}
+            contentKey={introLocale?.paragraphs ?? currentLocale}
             content={(
               <>
                 {(introLocale?.paragraphs || []).map((text, idx) => (
@@ -315,7 +319,7 @@ export default function HomePage() {
                 ))}
               </>
             )}
-            speed={50}
+            speed={40}
             className='flex flex-col gap-4 drop-shadow-md drop-shadow-white/70 font-extrabold mt-4'
           />
         </div>
@@ -335,7 +339,6 @@ export default function HomePage() {
               className='flex'
             />
           </h1>
-          <p className='text-gray-400 max-w-2xl leading-relaxed'>{teamLocale?.description}</p>
 
           <div className='absolute -top-20 w-full h-20 bg-gradient-to-t from-5% from-neutral-950 via-50% via-neutral-950/70 to-100% to-transparent' />
 
@@ -368,7 +371,7 @@ export default function HomePage() {
           {/* Circles */}
           <div
             ref={circleGroupRef}
-            className='absolute z-5 flex items-center justify-center transition ease-in-out duration-700'
+            className='absolute z-5 flex items-center justify-center transition ease-in-out duration-700 pointer-events-none'
           >
             <div ref={circle1Ref} className='absolute border border-white/50 size-40 rounded-full shadow-[0_0_64px_8px] shadow-white/20 transition ease-in-out duration-200' />
             <div ref={circle2Ref} className='absolute border border-white/50 size-80 rounded-full shadow-[0_0_64px_8px] shadow-white/20 transition ease-in-out duration-300' />

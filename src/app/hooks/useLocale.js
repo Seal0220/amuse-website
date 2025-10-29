@@ -1,12 +1,12 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useMemo, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 // 匯入所有語系 JSON
 import zh from '@/app/locales/zh.json';
 import en from '@/app/locales/en.json';
 
-const supportedLanguages = ["zh", "en"];
+const supportedLanguages = ['zh', 'en'];
 const locales = { zh, en };
 
 export default function useLocale(defaultLang = 'zh') {
@@ -14,27 +14,34 @@ export default function useLocale(defaultLang = 'zh') {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // ---------- 偵測目前語系 ----------
-  const detectLang = useCallback(() => {
+  // 直接由 pathname 推導目前語系（不用 state，避免 zh→en 閃爍）
+  const currentLocale = useMemo(() => {
     if (!pathname) return defaultLang;
+
     const segments = pathname.split('/').filter(Boolean);
     const first = segments[0];
-    if (supportedLanguages.includes(first)) return first;
+
+    if (first && supportedLanguages.includes(first)) return first;
+
+    // 無語系前綴時，試著讀 localStorage
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('lang');
-      if (stored && supportedLanguages.includes(stored)) return stored;
+      try {
+        const stored = window.localStorage.getItem('lang');
+        if (stored && supportedLanguages.includes(stored)) return stored;
+      } catch {}
     }
     return defaultLang;
   }, [pathname, defaultLang]);
 
-  const [currentLocale, setCurrentLocale] = useState(detectLang);
-  const [localeDict, setLocaleDict] = useState(locales[defaultLang]);
+  // 對應字典同樣由 currentLocale 衍生（不用 state）
+  const localeDict = useMemo(() => locales[currentLocale], [currentLocale]);
 
-  // ---------- 語言切換 ----------
+  // 切換語言：只改 URL 與 localStorage，不 setState
   const changeLanguage = useCallback(
     (newLang) => {
       if (!supportedLanguages.includes(newLang)) return;
-      const pathSegments = pathname.split('/').filter(Boolean);
+
+      const pathSegments = (pathname || '/').split('/').filter(Boolean);
 
       if (pathSegments.length > 0 && supportedLanguages.includes(pathSegments[0])) {
         pathSegments[0] = newLang;
@@ -43,28 +50,24 @@ export default function useLocale(defaultLang = 'zh') {
       }
 
       const newPath = '/' + pathSegments.join('/');
-      const queryParams = searchParams.toString();
+      const queryParams = searchParams ? searchParams.toString() : '';
       const url = queryParams ? `${newPath}?${queryParams}` : newPath;
 
-      localStorage.setItem('lang', newLang);
-      setCurrentLocale(newLang);
-      setLocaleDict(locales[newLang]);
+      try {
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem('lang', newLang);
+        }
+      } catch {}
+
       router.replace(url);
     },
     [pathname, router, searchParams]
   );
 
-  // ---------- 每次路由改變時更新 ----------
-  useEffect(() => {
-    const lang = detectLang();
-    setCurrentLocale(lang);
-    setLocaleDict(locales[lang]);
-  }, [pathname, detectLang]);
-
   return { currentLocale, changeLanguage, localeDict };
 }
 
-// 若進入無語言 prefix 頁面，自動導向
+// 若進入無語言 prefix 的頁面，自動導向
 export function useLocaleRedirect(defaultLang = 'zh') {
   const router = useRouter();
   const pathname = usePathname();
@@ -72,11 +75,20 @@ export function useLocaleRedirect(defaultLang = 'zh') {
 
   useEffect(() => {
     if (!pathname) return;
+
     const segments = pathname.split('/').filter(Boolean);
     const first = segments[0];
-    const supported = JSON.parse(process.env.LANG || '["zh","en"]');
-    if (!supported.includes(first)) {
-      const queryParams = searchParams.toString();
+
+    // 允許以環境變數覆蓋支援清單，否則預設 zh/en
+    let supported = [];
+    try {
+      supported = JSON.parse(process.env.LANG || '["zh","en"]');
+    } catch {
+      supported = ['zh', 'en'];
+    }
+
+    if (!supported.includes(first || '')) {
+      const queryParams = searchParams ? searchParams.toString() : '';
       const url = queryParams
         ? `/${defaultLang}${pathname}?${queryParams}`
         : `/${defaultLang}${pathname}`;

@@ -125,25 +125,25 @@ export default function ContactUs() {
               <tbody>
                 {address && (
                   <tr>
-                    <td className='text-sm text-neutral-400 w-24 md:w-28'>{`${locale.table.address}${colon}`}</td>
+                    <td className='text-sm text-neutral-400 w-30'>{`${locale.table.address}${colon}`}</td>
                     <td className='font-bold'>{address}</td>
                   </tr>
                 )}
                 {phone && (
                   <tr>
-                    <td className='text-sm text-neutral-400 w-24 md:w-28'>{`${locale.table.phone}${colon}`}</td>
+                    <td className='text-sm text-neutral-400 w-30'>{`${locale.table.phone}${colon}`}</td>
                     <td className='font-bold'>{phone}</td>
                   </tr>
                 )}
                 {email && (
                   <tr>
-                    <td className='text-sm text-neutral-400 w-24 md:w-28'>{`${locale.table.email}${colon}`}</td>
+                    <td className='text-sm text-neutral-400 w-30'>{`${locale.table.email}${colon}`}</td>
                     <td className='font-bold'>{email}</td>
                   </tr>
                 )}
                 {hours && (
                   <tr>
-                    <td className='text-sm text-neutral-400 w-24 md:w-28'>{`${locale.table.hours}${colon}`}</td>
+                    <td className='text-sm text-neutral-400 w-30'>{`${locale.table.hours}${colon}`}</td>
                     <td className='font-bold'>{hours}</td>
                   </tr>
                 )}
