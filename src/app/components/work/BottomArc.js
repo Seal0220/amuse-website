@@ -62,17 +62,31 @@ export default function BottomArc({ lang, prevWork, nextWork, type }) {
 
         const pickTitle = (w) => {
           if (!w) return '';
-          const t = w.title;
-          if (typeof t === 'string') {
-            try {
-              const obj = JSON.parse(t);
-              if (obj && typeof obj === 'object') return obj.zh || obj.en || Object.values(obj)[0] || (w.slug ?? '');
-            } catch {
-              return t; // 當作純文字
+          const priority = [lang, 'zh', 'en'].filter(Boolean);
+          const pickFromObject = (obj) => {
+            for (const key of priority) {
+              if (obj && typeof obj === 'object' && obj[key]) return obj[key];
             }
-          }
-          if (t && typeof t === 'object') return t.zh || t.en || Object.values(t)[0] || (w.slug ?? '');
-          return t ?? (w.slug ?? '');
+            const first = obj && typeof obj === 'object' ? Object.values(obj)[0] : null;
+            return typeof first === 'string' ? first : '';
+          };
+
+          const resolve = (value) => {
+            if (value == null) return '';
+            if (typeof value === 'string') {
+              try {
+                const parsed = JSON.parse(value);
+                if (parsed && typeof parsed === 'object') return pickFromObject(parsed);
+              } catch {
+                return value;
+              }
+              return value;
+            }
+            if (typeof value === 'object') return pickFromObject(value);
+            return String(value ?? '');
+          };
+
+          return resolve(w.title) || w.slug || '';
         };
 
         const inRect = (x, y, r) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;

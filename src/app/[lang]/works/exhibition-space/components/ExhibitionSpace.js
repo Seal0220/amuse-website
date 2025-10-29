@@ -3,10 +3,17 @@ import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Planet from './Planet';
 import Typewriter from '@/app/components/Typewriter';
+import useLocale from '@/app/hooks/useLocale';
 
 export default function ExhibitionSpace() {
   const router = useRouter();
-  const { lang } = useParams();
+  const { lang: langParam } = useParams();
+  const { currentLocale, localeDict } = useLocale();
+  const worksLocale = localeDict.pages.works || {};
+  const exhibitionLocale = worksLocale.types?.exhibitionSpace || {};
+  const titleMain = exhibitionLocale.title || 'Exhibition Space';
+  const titleSub = exhibitionLocale.subtitle || '';
+  const activeLang = langParam || currentLocale || 'zh';
   const [works, setWorks] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -19,7 +26,7 @@ export default function ExhibitionSpace() {
     titleSubRef.current?.reset?.();
     titleMainRef.current?.start?.();
     titleSubRef.current?.start?.();
-  }, []);
+  }, [titleMain, titleSub]);
 
   useEffect(() => {
     let canceled = false;
@@ -43,10 +50,10 @@ export default function ExhibitionSpace() {
       {/* Title */}
       <div className='fixed left-[8%] top-[14%] text-white select-none z-5 text-shadow-white text-shadow-[0_0_40px] pointer-events-none transition-all ease-in-out duration-500'>
         <div className='text-4xl mb-1'>
-          <Typewriter ref={titleMainRef} speed={180} content='展示空間' />
+          <Typewriter ref={titleMainRef} speed={180} content={titleMain} />
         </div>
         <div className='text-lg text-neutral-400'>
-          <Typewriter ref={titleSubRef} speed={100} content='Exhibition Space' />
+          <Typewriter ref={titleSubRef} speed={100} content={titleSub} />
         </div>
       </div>
 
@@ -58,7 +65,7 @@ export default function ExhibitionSpace() {
               key={w.id || w.slug || i}
               work={w}
               index={i}
-              onClick={(slug) => router.push(`/${lang}/works/exhibition-space/${slug}`)}
+              onClick={(slug) => router.push(`/${activeLang}/works/exhibition-space/${slug}`)}
             />
           ))}
         </div>

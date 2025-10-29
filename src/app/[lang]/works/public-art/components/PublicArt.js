@@ -5,6 +5,7 @@ import useBreathingNoise from '@/app/hooks/useBreathingNoise';
 import useAxisWobbleRef from '@/app/hooks/useAxisWobble';
 import WorkDots from './WorkDots';
 import Typewriter from '@/app/components/Typewriter';
+import useLocale from '@/app/hooks/useLocale';
 
 /**
  * 動態：一年一軌道、一作一點（public-art）
@@ -12,6 +13,12 @@ import Typewriter from '@/app/components/Typewriter';
  * 其餘動畫／幾何維持原樣
  */
 export default function PublicArt({ lang = 'zh' }) {
+  const { currentLocale, localeDict } = useLocale();
+  const worksLocale = localeDict.pages.works || {};
+  const publicArtLocale = worksLocale.types?.publicArt || {};
+  const titleMain = publicArtLocale.title || 'Public Art';
+  const titleSub = publicArtLocale.subtitle || '';
+  const activeLang = lang || currentLocale || 'zh';
   const [years, setYears] = useState(['__CENTER__']);           // 例如 ['2018', '2020', ..., '__CENTER__']
   const [worksByYear, setWorksByYear] = useState([]);           // 例如 [['a','b'], ['c'], ...] 對應 years（不含 CENTER）
 
@@ -187,17 +194,17 @@ export default function PublicArt({ lang = 'zh' }) {
     titleSubRef.current?.reset?.();
     titleMainRef.current?.start?.();
     titleSubRef.current?.start?.();
-  }, []);
+  }, [titleMain, titleSub]);
 
   return (
     <div style={{ height: pageHeight }} className='min-h-lvh relative w-full bg-neutral-950'>
       {/* Title */}
       <div className='fixed left-[8%] top-[14%] text-white select-none z-5 text-shadow-white text-shadow-[0_0_40px] pointer-events-none transition-all ease-in-out duration-500'>
         <div className='text-4xl mb-1'>
-          <Typewriter ref={titleMainRef} speed={180} content='公共藝術' />
+          <Typewriter ref={titleMainRef} speed={180} content={titleMain} />
         </div>
         <div className='text-lg text-neutral-400'>
-          <Typewriter ref={titleSubRef} speed={100} content='Public Art' />
+          <Typewriter ref={titleSubRef} speed={100} content={titleSub} />
         </div>
       </div>
 
@@ -228,7 +235,7 @@ export default function PublicArt({ lang = 'zh' }) {
           {/* 作品白點（依每年實際作品數量） */}
           <WorkDots
             ref={workDotsRef}
-            lang={lang}
+            lang={activeLang}
             years={years}
             ringRefs={ringRefs}
             isYear={(y) => !(y === '__CENTER__' || y === '__GAP__')}

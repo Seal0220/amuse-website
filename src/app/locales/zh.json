@@ -1,20 +1,41 @@
 {
   "pages": {
     "home": {
-      "title": "首頁",
-      "welcome": "歡迎來到阿木司設計"
-    },
-    "team": {
-      "title": "我們的團隊",
-      "description": "我們是一群專注於藝術與設計的創作者。"
+      "intro": {
+        "headline": "阿木司設計是由藝術家、設計師與博物館人組成的團隊。",
+        "paragraphs": [
+          "也因為不同專長領域的結合，作品橫跨藝術創作、公共藝術、博物館設計規劃、空間設計等。我們在作品的脈絡上緊密思考空間與環境的可能性，透過創作操作延伸場域的脈絡，善於整合不同媒材與媒體於空間之中。",
+          "致力於在空間、立體動力、機械與科技等項目中展現最深刻的感受與想像。"
+        ]
+      },
+      "team": {
+        "memberTitle": ["我們的團隊", "團隊成員"],
+        "description": "我們在多元的專業背景中彼此協作，將藝術與設計的能量轉化為場域中的嶄新體驗。",
+        "untitled": "(未命名)",
+        "missing": "—",
+        "labels": {
+          "education": "學歷",
+          "specialty": "專長"
+        }
+      }
     },
     "works": {
-      "title": "作品一覽",
-      "description": "探索我們的藝術與設計專案。"
-    },
-    "contact": {
-      "title": "聯絡我們",
-      "address": "422003 臺中市后里區馬場路230號"
+      "categoryHeading": "作品類別",
+      "categorySubheading": "Our Works",
+      "orbitLabels": {
+        "exhibitionSpace": "展示空間",
+        "publicArt": "公共藝術"
+      },
+      "types": {
+        "publicArt": {
+          "title": "公共藝術",
+          "subtitle": "Public Art"
+        },
+        "exhibitionSpace": {
+          "title": "展示空間",
+          "subtitle": "Exhibition Space"
+        }
+      }
     }
   },
   "components": {
@@ -36,28 +57,49 @@
         "message": "需求說明*",
         "submit": "送出"
       },
-      "info": {
-        "company": "阿木司設計 Amuse Art and Design",
-        "address": {
-          "name": "地址",
-          "content": "422003 臺中市后里區馬場路230號"
-        },
-        "phone": {
-          "name": "電話",
-          "content": "00000000"
-        },
-        "email": {
-          "name": "email",
-          "content": "AmuseArtDesign??@gmail.com"
-        },
-        "hours": {
-          "name": "營業時間",
-          "content": "9:00-18:00"
-        }
+      "messages": {
+        "loading": "載入聯絡資訊中...",
+        "sending": "送出中...",
+        "success": "已成功送出，我們將盡快回覆。",
+        "error": "送出失敗，請稍後再試。"
+      },
+      "table": {
+        "address": "地址",
+        "phone": "聯絡電話",
+        "email": "電子郵件",
+        "hours": "營業時間",
+        "hoursDefault": "週一到週五 9:00 ~ 18:00，國定假日公休"
+      },
+      "links": {
+        "instagram": "Instagram",
+        "facebook": "Facebook"
       }
     },
     "Footer": {
-      "copyright": "Copyright © 2024 Amuse Art and Design 版權所有"
+      "copyright": "Copyright © 2024 Amuse Art and Design 版權所有。",
+      "credits": "網站由 Chen Yiquan 與 Liao Xuan-Tang 建置。"
+    },
+    "Work": {
+      "listLabel": "作品列表",
+      "types": {
+        "public-art": "公共藝術",
+        "exhibition-space": "展示空間"
+      },
+      "aria": {
+        "back": "返回作品列表"
+      },
+      "labels": {
+        "location": "設置地點:",
+        "medium": "媒材:",
+        "management": "管理單位:",
+        "size": "尺寸 (cm):"
+      },
+      "dimensions": {
+        "length": "長",
+        "width": "寬",
+        "height": "高",
+        "separator": " × "
+      }
     }
   }
 }

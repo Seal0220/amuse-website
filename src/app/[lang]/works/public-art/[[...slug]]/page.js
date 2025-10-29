@@ -16,7 +16,7 @@ export default async function PublicArtPage({ params }) {
 
   // 無 slug：顯示 PublicArt
   if (!currentSlug) {
-    return <PublicArt />;
+    return <PublicArt lang={lang} />;
   }
 
   // 有 slug：伺服端直查 DB

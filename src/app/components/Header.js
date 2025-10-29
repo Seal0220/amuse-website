@@ -55,21 +55,21 @@ export default function Header() {
         </div>
 
         {/* 導覽列 */}
-        <nav className='flex flex-row gap-10 pointer-events-auto'>
+        <nav className='flex flex-row gap-10 pointer-events-auto pr-8'>
           <div className='flex flex-row gap-20 text-lg tracking-wide items-center'>
             {/* 這三個在動畫頁用同頁切換，不在動畫頁就真跳轉 */}
-            <a href={`/${lang}`} onClick={(e) => navigateSamePage(e, 'home')} className='hover:text-gray-300 text-shadow-white hover:text-shadow-[0_0_24px] hover:-translate-y-1 text-nowrap transition-all duration-300 ease-in-out'>
+            <a href={`/${lang}`} onClick={(e) => navigateSamePage(e, 'home')} className='hover:text-neutral-300 text-shadow-white hover:text-shadow-[0_0_24px] hover:-translate-y-1 text-nowrap transition-all duration-300 ease-in-out'>
               {locale.home}
             </a>
-            <a href={`/${lang}/team`} onClick={(e) => navigateSamePage(e, 'team')} className='hover:text-gray-300 text-shadow-white hover:text-shadow-[0_0_24px] hover:-translate-y-1 text-nowrap transition-all duration-300 ease-in-out'>
+            <a href={`/${lang}/team`} onClick={(e) => navigateSamePage(e, 'team')} className='hover:text-neutral-300 text-shadow-white hover:text-shadow-[0_0_24px] hover:-translate-y-1 text-nowrap transition-all duration-300 ease-in-out'>
               {locale.team}
             </a>
-            <a href={`/${lang}/contact`} onClick={(e) => navigateSamePage(e, 'contact')} className='hover:text-gray-300 text-shadow-white hover:text-shadow-[0_0_24px] hover:-translate-y-1 text-nowrap transition-all duration-300 ease-in-out'>
+            <a href={`/${lang}/contact`} onClick={(e) => navigateSamePage(e, 'contact')} className='hover:text-neutral-300 text-shadow-white hover:text-shadow-[0_0_24px] hover:-translate-y-1 text-nowrap transition-all duration-300 ease-in-out'>
               {locale.contact}
             </a>
 
             {/* works 保留 Link（本來就是獨立頁） */}
-            <Link href={`/${lang}/works`} className='hover:text-gray-300 text-shadow-white hover:text-shadow-[0_0_24px] hover:-translate-y-1 text-nowrap transition-all duration-300 ease-in-out'>
+            <Link href={`/${lang}/works`} className='hover:text-neutral-300 text-shadow-white hover:text-shadow-[0_0_24px] hover:-translate-y-1 text-nowrap transition-all duration-300 ease-in-out'>
               {locale.works}
             </Link>
           </div>
@@ -77,7 +77,7 @@ export default function Header() {
           {/* 語言切換 */}
           <button
             onClick={() => changeLanguage(currentLocale === 'zh' ? 'en' : 'zh')}
-            className='ml-6 border border-gray-500 px-3 py-1 rounded hover:bg-gray-800 transition cursor-pointer'
+            className='ml-6 border border-neutral-500 px-3 py-1 rounded hover:bg-neutral-800 transition cursor-pointer'
           >
             {currentLocale === 'zh' ? 'EN' : '中'}
           </button>

@@ -1,15 +1,26 @@
 'use client';
-import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
+import React, { useEffect, useRef, useState, useLayoutEffect, useMemo } from 'react';
 import ImageSlider from '@/app/components/work/ImageSlider';
 import { useRouter, usePathname } from 'next/navigation';
 import { IoIosArrowBack } from "react-icons/io";
 import Typewriter, { startTypewriter } from '@/app/components/Typewriter';
+import useLocale from '@/app/hooks/useLocale';
 
 export default function Work({ lang, work, type }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { currentLocale, localeDict } = useLocale();
+  const workLocale = useMemo(() => localeDict.components.Work || {}, [localeDict]);
+  const listText = workLocale.listLabel || 'Project List';
+  const typeLabels = workLocale.types || {};
+  const labels = workLocale.labels || {};
+  const dims = workLocale.dimensions || {};
+  const separator = dims.separator || ' × ';
+  const aria = workLocale.aria || {};
+  const dash = localeDict.pages?.home?.team?.missing || '—';
 
   const { images, title, year, location, medium, management, description, size = {} } = work || {};
+  const activeLang = lang || currentLocale || 'zh';
 
   // ---------- Typewriter refs ----------
   const backTypeRef = useRef(null);
@@ -36,26 +47,24 @@ export default function Work({ lang, work, type }) {
   const [descH, setDescH] = useState(null);
 
   // ---------- Helpers ----------
-  const dashIfEmpty = (v) => (v ? String(v) : '—');
+  const dashIfEmpty = (v) => (v ? String(v) : dash);
 
   // ---------- Derived values ----------
   const [typeName, setTypeName] = useState('');
-  const listText = '作品列表';
 
   // 尺寸字串（依照原本顯示邏輯）
-  const sizeText = (!size.width && !size.height && !size.depth && !size.length)
-    ? '—'
-    : [
-      size.length ? `長 ${size.length}` : null,
-      size.width ? `寬 ${size.width}` : null,
-      size.height ? `高 ${size.height}` : null
-    ].filter(Boolean).join(' × ');
+  const sizeParts = [
+    size.length ? `${dims.length || 'Length'} ${size.length}` : null,
+    size.width ? `${dims.width || 'Width'} ${size.width}` : null,
+    size.height ? `${dims.height || 'Height'} ${size.height}` : null,
+  ].filter(Boolean);
+  const sizeText = sizeParts.length ? sizeParts.join(separator) : dash;
 
   // ---------- Kick animation ----------
   useEffect(() => {
     const match = pathname?.match(/\/works\/(public-art|exhibition-space)(?:\/|$)/);
-    const typeSlug = match?.[1] || 'public-art'; // 後備：public-art
-    setTypeName(typeSlug === 'public-art' ? '公共藝術' : '展示空間');
+    const typeSlug = match?.[1] || type || 'public-art';
+    setTypeName(typeLabels[typeSlug] || typeLabels[type] || typeSlug);
 
     startTypewriter(backListRef, 150);
 
@@ -78,7 +87,7 @@ export default function Work({ lang, work, type }) {
 
     // 描述
     startTypewriter(descRef, 1500);
-  }, []);
+  }, [pathname, typeLabels, type]);
 
   useEffect(() => {
     if (typeName && backTypeRef.current) {
@@ -126,8 +135,8 @@ export default function Work({ lang, work, type }) {
             {/* 返回 */}
             <div
               className='absolute flex flex-row gap-2 items-center bg-neutral-800 z-51 px-4 py-2 rounded-full border-2 border-white/30 mr-[40%] select-none cursor-pointer translate-y-0 hover:-translate-y-1 shadow-[0_0_12px_4px] hover:shadow-[0_0_24px_12px] shadow-white/15 transition-all duration-300 ease-in-out'
-              onClick={() => { router.replace(`/zh/works/${type}`); }}
-              aria-label="返回作品列表"
+              onClick={() => { router.replace(`/${activeLang}/works/${type}`); }}
+              aria-label={aria.back || 'Back to project list'}
             >
               <IoIosArrowBack className='mt-0.5' />
               <Typewriter
@@ -181,7 +190,7 @@ export default function Work({ lang, work, type }) {
                   ref={locLabelRef}
                   speed={40}
                   className='text-xs mt-1 mr-2 w-20'
-                  content="設置地點:"
+                  content={labels.location || 'Location:'}
                 />
                 <Typewriter
                   ref={locValRef}
@@ -197,7 +206,7 @@ export default function Work({ lang, work, type }) {
                   ref={medLabelRef}
                   speed={40}
                   className='text-xs mt-1 mr-2 w-20'
-                  content="媒材:"
+                  content={labels.medium || 'Medium:'}
                 />
                 <Typewriter
                   ref={medValRef}
@@ -213,7 +222,7 @@ export default function Work({ lang, work, type }) {
                   ref={mgmtLabelRef}
                   speed={40}
                   className='text-xs mt-1 mr-2 w-20'
-                  content="管理單位:"
+                  content={labels.management || 'Client:'}
                 />
                 <Typewriter
                   ref={mgmtValRef}
@@ -229,7 +238,7 @@ export default function Work({ lang, work, type }) {
                   ref={sizeLabelRef}
                   speed={40}
                   className='text-xs mt-1 mr-2 w-20 font-bold'
-                  content="尺寸 (cm):"
+                  content={labels.size || 'Dimensions (cm):'}
                 />
                 <Typewriter
                   ref={sizeValRef}

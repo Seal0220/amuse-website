@@ -1,5 +1,6 @@
 'use client';
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import useLocale from '@/app/hooks/useLocale';
 
 /**
  * MemberCard 元件
@@ -9,6 +10,15 @@ import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } f
  * @param {boolean} showDetail 是否顯示詳細資訊
  */
 const MemberCard = forwardRef(({ name, img, details }, ref) => {
+  const { currentLocale, localeDict } = useLocale();
+  const teamLocale = localeDict.pages.home.team;
+  const labels = teamLocale?.labels || {};
+  const missing = teamLocale?.missing ?? '—';
+  const colon = currentLocale === 'zh' ? '：' : ':';
+  const educationLabel = labels.education || 'Education';
+  const specialtyLabel = labels.specialty || 'Specialty';
+  const educationText = details?.education || missing;
+  const specialtyText = details?.specialty || missing;
   const cardRef = useRef(null);
   const [isShowDetail, setIsShowDetail] = useState(false);
 
@@ -35,12 +45,14 @@ const MemberCard = forwardRef(({ name, img, details }, ref) => {
         <div className={`text-xl font-bold text-center transition-all ease-in-out duration-500 ${showDetail}`}>{name}</div>
         <div className={`h-px w-8 bg-white transition-all ease-in-out duration-600 ${showDetail}`} />
         <div className={`w-full flex flex-col gap-2 text-center transition-all ease-in-out duration-700 ${showDetail}`}>
-          <div>學歷：{details?.education || '—'}</div>
-          <div>專長：{details?.specialty || '—'}</div>
+          <div>{educationLabel}{colon} {educationText}</div>
+          <div>{specialtyLabel}{colon} {specialtyText}</div>
         </div>
       </div>
     </div>
   );
 });
+
+MemberCard.displayName = 'MemberCard';
 
 export default MemberCard;
