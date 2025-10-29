@@ -1,20 +1,41 @@
 {
   "pages": {
     "home": {
-      "title": "Home",
-      "welcome": "Welcome to Amuse Art and Design"
-    },
-    "team": {
-      "title": "Our Team",
-      "description": "We are a group of creators focused on art and design."
+      "intro": {
+        "headline": "Amuse Art & Design is a team of artists, designers, and museum professionals.",
+        "paragraphs": [
+          "By combining diverse expertise, our projects span art installations, public art, museum planning, and spatial design. We closely examine how space and environment inform one another, extending each site's narrative while integrating varied media into immersive experiences.",
+          "We strive to evoke profound emotions and imagination through spatial design, kinetic structures, mechanical systems, and technology."
+        ]
+      },
+      "team": {
+        "memberTitle": ["Our Team", "Team Members"],
+        "description": "Across disciplines we collaborate to transform creative energy into new experiences for every venue.",
+        "untitled": "(Untitled)",
+        "missing": "—",
+        "labels": {
+          "education": "Education",
+          "specialty": "Expertise"
+        }
+      }
     },
     "works": {
-      "title": "Projects",
-      "description": "Explore our art and design works."
-    },
-    "contact": {
-      "title": "Contact Us",
-      "address": "No. 230, Machang Rd., Houli Dist., Taichung City 422003, Taiwan"
+      "categoryHeading": "Project Categories",
+      "categorySubheading": "Our Works",
+      "orbitLabels": {
+        "exhibitionSpace": "Exhibition Space",
+        "publicArt": "Public Art"
+      },
+      "types": {
+        "publicArt": {
+          "title": "Public Art",
+          "subtitle": "Public Art"
+        },
+        "exhibitionSpace": {
+          "title": "Exhibition Space",
+          "subtitle": "Exhibition Space"
+        }
+      }
     }
   },
   "components": {
@@ -25,8 +46,60 @@
       "contact": "Contact",
       "company_name": "Amuse Art & Design"
     },
+    "ContactUs": {
+      "title": "Contact Us",
+      "form": {
+        "company": "Company Name",
+        "person": "Contact Person*",
+        "phone": "Phone",
+        "email": "Email*",
+        "address": "Location",
+        "message": "Project Details*",
+        "submit": "Send"
+      },
+      "messages": {
+        "loading": "Loading contact information...",
+        "sending": "Sending...",
+        "success": "Message sent successfully. We'll get back to you soon.",
+        "error": "Failed to send. Please try again later."
+      },
+      "table": {
+        "address": "Address",
+        "phone": "Phone",
+        "email": "Email",
+        "hours": "Business Hours",
+        "hoursDefault": "Mon–Fri 9:00 AM – 6:00 PM (closed on national holidays)"
+      },
+      "links": {
+        "instagram": "Instagram",
+        "facebook": "Facebook"
+      }
+    },
     "Footer": {
-      "copyright": "Copyright © 2024 Amuse Art and Design. All rights reserved."
+      "copyright": "Copyright © 2024 Amuse Art and Design. All rights reserved.",
+      "credits": "Website developed by Chen Yiquan & Liao Xuan-Tang."
+    },
+    "Work": {
+      "listLabel": "Project List",
+      "types": {
+        "public-art": "Public Art",
+        "exhibition-space": "Exhibition Space"
+      },
+      "aria": {
+        "back": "Back to project list"
+      },
+      "labels": {
+        "location": "Location:",
+        "medium": "Medium:",
+        "management": "Client / Organizer:",
+        "size": "Dimensions (cm):"
+      },
+      "dimensions": {
+        "length": "Length",
+        "width": "Width",
+        "height": "Height",
+        "separator": " × "
+      }
     }
   }
 }

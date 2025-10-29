@@ -18,7 +18,7 @@ export default function ImageSlider({ images = [], initImage = '' }) {
     if (initImage) {
       return (
         <div className='relative w-full h-full overflow-hidden'>
-          <img src={initImage} className='absolute inset-0 size-full object-cover select-none pointer-events-none' />
+          <img src={initImage} alt='' className='absolute inset-0 size-full object-cover select-none pointer-events-none' />
         </div>
       )
     } else {

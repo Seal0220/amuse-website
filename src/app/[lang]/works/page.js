@@ -2,9 +2,17 @@
 import React, { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Typewriter from '@/app/components/Typewriter';
+import useLocale from '@/app/hooks/useLocale';
 
 export default function WorkPage() {
   const router = useRouter();
+  const { currentLocale, localeDict } = useLocale();
+  const worksLocale = localeDict.pages.works || {};
+  const categoryHeading = worksLocale.categoryHeading || '';
+  const categorySubheading = worksLocale.categorySubheading || '';
+  const orbitLabels = worksLocale.orbitLabels || {};
+  const labelExhibition = orbitLabels.exhibitionSpace || 'Exhibition Space';
+  const labelPublic = orbitLabels.publicArt || 'Public Art';
 
   const worksRef = useRef(null);
   const p5CanvasRef = useRef(null);
@@ -26,7 +34,9 @@ export default function WorkPage() {
         const hoverState = new Map();
         let particles = [];
 
-        const url1 = '/zh/works/exhibition-space', url2 = '/zh/works/public-art';
+        const lang = currentLocale || 'zh';
+        const url1 = `/${lang}/works/exhibition-space`;
+        const url2 = `/${lang}/works/public-art`;
         const imgSlug1 = '/types/exhibition-space_hero.jpg', imgSlug2 = '/types/public-art_hero.jpg';
         let planets = [];
         let frameHover = false;   // 本幀是否有任一行星被 hover
@@ -393,7 +403,7 @@ export default function WorkPage() {
                 pos: orbit2D(cx, cy, 360 * baseScale, a1, tilt1Dynamic, ELLIPSE_ANGLE_1),
                 r: 40 * baseScale,
                 url: url1,
-                label: '展示空間',
+                label: labelExhibition,
               },
               {
                 id: 'planet2',
@@ -401,7 +411,7 @@ export default function WorkPage() {
                 pos: orbit2D(cx, cy, 520 * baseScale, a2, -tilt2Dynamic, ELLIPSE_ANGLE_2),
                 r: 54 * baseScale,
                 url: url2,
-                label: '公共藝術',
+                label: labelPublic,
               }
             ];
 
@@ -567,14 +577,14 @@ export default function WorkPage() {
         try { p5Instance.remove(); } catch { }
       }
     };
-  }, []);
+  }, [currentLocale, labelExhibition, labelPublic, router]);
 
   useEffect(() => {
-    titleMainRef.current.reset();
-    titleSubRef.current.reset();
-    titleMainRef.current.start();
-    titleSubRef.current.start();
-  }, []);
+    titleMainRef.current?.reset?.();
+    titleSubRef.current?.reset?.();
+    titleMainRef.current?.start?.();
+    titleSubRef.current?.start?.();
+  }, [categoryHeading, categorySubheading]);
 
   return (
     <div
@@ -585,10 +595,10 @@ export default function WorkPage() {
       {/* Title */}
       <div className='fixed left-[8%] top-[14%] text-white select-none z-5 text-shadow-white text-shadow-[0_0_40px] pointer-events-none'>
         <div className='text-4xl mb-1 h-10'>
-          <Typewriter ref={titleMainRef} speed={240} content='作品類別' />
+          <Typewriter ref={titleMainRef} speed={240} content={categoryHeading} />
         </div>
         <div className='text-lg text-neutral-400'>
-          <Typewriter ref={titleSubRef} speed={200} content='Our Works' />
+          <Typewriter ref={titleSubRef} speed={200} content={categorySubheading} />
         </div>
       </div>
 

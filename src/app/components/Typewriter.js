@@ -237,4 +237,6 @@ const Typewriter = forwardRef(
   }
 );
 
+Typewriter.displayName = 'Typewriter';
+
 export default Typewriter;

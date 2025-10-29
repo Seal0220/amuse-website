@@ -1,12 +1,12 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import useLocale from '@/app/hooks/useLocale';
 
 export default function Footer() {
-  const { currentLocale, changeLanguage, localeDict } = useLocale();
-  const locale = localeDict.components.Header;
+  const { currentLocale, localeDict } = useLocale();
+  const headerLocale = localeDict.components.Header;
+  const footerLocale = localeDict.components.Footer;
 
   const [contact, setContact] = useState(null);
 
@@ -23,12 +23,18 @@ export default function Footer() {
     load();
   }, []);
 
-  const address = contact?.address?.zh || contact?.address?.en || '';
+  const pickLocalized = (value) => {
+    if (value == null) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object') {
+      return value[currentLocale] ?? value.zh ?? value.en ?? Object.values(value)[0] ?? '';
+    }
+    return '';
+  };
+
+  const address = pickLocalized(contact?.address);
   const phone = contact?.phone || '';
   const email = contact?.email || '';
-  const hours = contact?.hours
-    ? `${contact.hours.open || ''} ~ ${contact.hours.close || ''}`
-    : '';
   const instagram = contact?.instagram || '#';
   const facebook = contact?.facebook || '#';
 
@@ -37,14 +43,14 @@ export default function Footer() {
       <div className='mx-auto flex flex-row gap-2 items-center justify-center'>
         <div className='flex flex-row gap-4 items-center mr-2'>
           <Link href={instagram} target='_blank' rel='noopener noreferrer' className='flex flex-row gap-2 items-center hover:-translate-y-0.5 transition-all duration-300 ease-in-out'>
-            <img src='/ig-logo.png' className='size-8' />
+            <img src='/ig-logo.png' alt='Instagram' className='size-8' />
           </Link>
           <Link href={facebook} target='_blank' rel='noopener noreferrer' className='flex flex-row gap-2 items-center hover:-translate-y-0.5 transition-all duration-300 ease-in-out'>
-            <img src='/fb-logo.png' className='size-8' />
+            <img src='/fb-logo.png' alt='Facebook' className='size-8' />
           </Link>
         </div>
         <div className='flex items-center'>
-          <img src='/Amuse-LOGO-w.png' alt={locale.company_name} className='h-12 object-contain select-none pointer-events-none' />
+          <img src='/Amuse-LOGO-w.png' alt={headerLocale.company_name} className='h-12 object-contain select-none pointer-events-none' />
         </div>
         <div className='flex flex-col gap-1'>
           <div className='text-xs font-bold flex flex-row gap-2 items-center select-auto'>
@@ -53,12 +59,12 @@ export default function Footer() {
             <span>{address}</span>
           </div>
           <div className='text-xs text-white/85 font-thin select-none'>
-            Copyright © 2025 amuse art and design 阿木司設計 All right reserved.
+            {footerLocale?.copyright}
           </div>
         </div>
       </div>
       <div className='text-xs text-white/50 font-thin select-auto'>
-        website is developed by Chen Yiquan & Liao Xuan-Tang.
+        {footerLocale?.credits}
       </div>
     </footer>
   );

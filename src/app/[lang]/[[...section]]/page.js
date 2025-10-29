@@ -13,8 +13,13 @@ import HeroImages from './components/HeroImages';
 
 
 export default function HomePage() {
-  const { localeDict } = useLocale();
-  const locale = localeDict.pages.home;
+  const { localeDict, currentLocale } = useLocale();
+  const homeLocale = localeDict.pages.home;
+  const introLocale = homeLocale.intro;
+  const teamLocale = homeLocale.team;
+  const memberTitles = teamLocale?.memberTitle || [];
+  const memberTitlePrimary = memberTitles[0] ?? '';
+  const memberTitleSecondary = memberTitles[1] ?? memberTitlePrimary;
 
   // --------- 狀態變數 ----------
   const [members, setMembers] = useState([]);
@@ -59,7 +64,15 @@ export default function HomePage() {
   const membersRef = useRef([]);
   membersRef.current = members.map((_, i) => membersRef.current[i] ?? React.createRef());
   const memberTypewriter1Ref = useRef(null);
-  const memberTitle = ['我們的團隊', '團隊成員'];
+
+  const pickLocalized = (value, fallback = teamLocale?.missing ?? '') => {
+    if (value == null) return fallback;
+    if (typeof value === 'string') return value || fallback;
+    if (typeof value === 'object') {
+      return value[currentLocale] ?? value.zh ?? value.en ?? Object.values(value)[0] ?? fallback;
+    }
+    return fallback;
+  };
 
   const circleGroupRef = useRef(null);
   const circle1Ref = useRef(null);
@@ -182,7 +195,7 @@ export default function HomePage() {
       ele.style.transform = 'translateY(75lvh)';
     })
     .when({ on: 1, to: 1.35 }, (ele) => {
-      memberTypewriter1Ref.current?.retype(memberTitle[0], 120);
+      memberTypewriter1Ref.current?.retype(memberTitlePrimary, 120);
 
       membersAni.forEach(memberAni => {
         memberAni.ele.style.scale = 0;
@@ -194,7 +207,7 @@ export default function HomePage() {
       ele.style.transform = 'translateY(65lvh)';
     })
     .when({ on: 1.35, to: 1.7 }, (ele) => {
-      memberTypewriter1Ref.current?.retype(memberTitle[0], 120);
+      memberTypewriter1Ref.current?.retype(memberTitlePrimary, 120);
 
       membersAni.forEach(memberAni => {
         memberAni.ele.style.scale = 1;
@@ -206,7 +219,7 @@ export default function HomePage() {
       ele.style.transform = 'translateY(65lvh)';
     })
     .when({ on: 1.7, to: 2.5 }, (ele) => {
-      memberTypewriter1Ref.current?.retype(memberTitle[1], 120);
+      memberTypewriter1Ref.current?.retype(memberTitleSecondary, 120);
 
       membersAni.forEach(memberAni => {
         memberAni.ele.style.scale = 1;
@@ -284,9 +297,7 @@ export default function HomePage() {
       >
         <Typewriter
           ref={infoTypewriter1Ref}
-          content={(
-            <p>阿木司設計是由藝術家，設計師與博物館人組成的團隊。</p>
-          )}
+          content={(<p>{introLocale?.headline}</p>)}
           speed={50}
           className='flex flex-col gap-4 drop-shadow-md drop-shadow-white/70 font-extrabold'
         />
@@ -299,8 +310,9 @@ export default function HomePage() {
             ref={infoTypewriter2Ref}
             content={(
               <>
-                <p>也因為不同專長領域的結合，作品橫跨藝術創作、公共藝術、博物館設計規劃、空間設計等。在於作品的脈絡上緊密思考空間與環境的可能性，透過作品的操作延伸場域的脈絡，善於整合不同媒材與媒體於空間之中。</p>
-                <p>致力於在空間、立體、動力、機械與科技等項目中展現最深刻的感受與想像。</p>
+                {(introLocale?.paragraphs || []).map((text, idx) => (
+                  <p key={idx}>{text}</p>
+                ))}
               </>
             )}
             speed={50}
@@ -323,7 +335,7 @@ export default function HomePage() {
               className='flex'
             />
           </h1>
-          <p className='text-gray-400 max-w-2xl leading-relaxed'>{locale.description}</p>
+          <p className='text-gray-400 max-w-2xl leading-relaxed'>{teamLocale?.description}</p>
 
           <div className='absolute -top-20 w-full h-20 bg-gradient-to-t from-5% from-neutral-950 via-50% via-neutral-950/70 to-100% to-transparent' />
 
@@ -333,18 +345,23 @@ export default function HomePage() {
             className='absolute z-6 top-0 transition ease-in-out duration-700'
           >
             <div className='flex flex-row justify-center items-center gap-32'>
-              {members.map((member, i) => (
-                <MemberCard
-                  key={member?.id}
-                  ref={membersRef.current[i]}
-                  name={member?.name.zh || member?.name.en || '(未命名)'}
-                  img={member?.image || '/members/default.jpg'}
-                  details={{
-                    education: member?.education.zh || member?.education.en || '',
-                    specialty: member?.specialty.zh || member?.specialty.en || '',
-                  }}
-                />
-              ))}
+              {members.map((member, i) => {
+                const name = pickLocalized(member?.name, teamLocale?.untitled ?? '');
+                const education = pickLocalized(member?.education);
+                const specialty = pickLocalized(member?.specialty);
+                return (
+                  <MemberCard
+                    key={member?.id ?? i}
+                    ref={membersRef.current[i]}
+                    name={name}
+                    img={member?.image || '/members/default.jpg'}
+                    details={{
+                      education,
+                      specialty,
+                    }}
+                  />
+                );
+              })}
             </div>
           </div>
 

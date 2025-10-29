@@ -4,13 +4,22 @@ import useLocale from '@/app/hooks/useLocale';
 import Link from 'next/link';
 
 export default function ContactUs() {
-  const { localeDict } = useLocale();
+  const { localeDict, currentLocale } = useLocale();
   const locale = localeDict.components.ContactUs;
 
   const [contact, setContact] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [msg, setMsg] = useState('');
+  const [msgKey, setMsgKey] = useState(null);
+
+  const pickLocalized = (value) => {
+    if (value == null) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object') {
+      return value[currentLocale] ?? value.zh ?? value.en ?? Object.values(value)[0] ?? '';
+    }
+    return '';
+  };
 
   // === 取得聯絡資訊 ===
   useEffect(() => {
@@ -32,7 +41,7 @@ export default function ContactUs() {
   async function handleSubmit(e) {
     e.preventDefault();
     setSending(true);
-    setMsg('');
+    setMsgKey(null);
 
     const form = e.target;
     const payload = {
@@ -51,10 +60,10 @@ export default function ContactUs() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error(await res.text());
-      setMsg('已成功送出，我們將盡快回覆。');
+      setMsgKey('success');
       form.reset();
     } catch (err) {
-      setMsg('送出失敗，請稍後再試。');
+      setMsgKey('error');
     } finally {
       setSending(false);
     }
@@ -64,20 +73,24 @@ export default function ContactUs() {
     return (
       <section className='bg-neutral-900 text-white py-40 px-6'>
         <div className='max-w-6xl mx-auto text-center opacity-60'>
-          載入聯絡資訊中...
+          {locale.messages.loading}
         </div>
       </section>
     );
   }
 
-  const address = contact?.address?.zh || contact?.address?.en || '';
+  const address = pickLocalized(contact?.address);
   const phone = contact?.phone || '';
   const email = contact?.email || '';
-  const hours = contact?.hours
-    ? `${contact.hours.open || ''} ~ ${contact.hours.close || ''}`
+  const hoursRange = contact?.hours
+    ? `${contact.hours.open || ''} ~ ${contact.hours.close || ''}`.trim()
     : '';
+  const hours = hoursRange || locale.table.hoursDefault;
   const instagram = contact?.instagram || '#';
   const facebook = contact?.facebook || '#';
+  const colon = currentLocale === 'zh' ? '：' : ':';
+  const messageText = msgKey ? locale.messages[msgKey] : '';
+  const messageClass = msgKey === 'error' ? 'text-red-400' : 'text-green-400';
 
   return (
     <section className='bg-neutral-900 text-white py-40 px-6'>
@@ -101,9 +114,9 @@ export default function ContactUs() {
               disabled={sending}
               className='w-full py-3 rounded-full bg-white text-black font-medium select-none hover:bg-neutral-200 hover:-translate-y-1 transition-all duration-300 ease-in-out cursor-pointer'
             >
-              {sending ? '送出中...' : locale.form.submit || 'Send'}
+              {sending ? locale.messages.sending : (locale.form.submit || 'Send')}
             </button>
-            {msg && <div className='text-center text-sm text-green-400 mt-2'>{msg}</div>}
+            {messageText && <div className={`text-center text-sm mt-2 ${messageClass}`}>{messageText}</div>}
           </form>
 
           {/* 右側聯絡資訊 */}
@@ -112,26 +125,26 @@ export default function ContactUs() {
               <tbody>
                 {address && (
                   <tr>
-                    <td className='text-sm text-neutral-400 w-20'>地址：</td>
+                    <td className='text-sm text-neutral-400 w-24 md:w-28'>{`${locale.table.address}${colon}`}</td>
                     <td className='font-bold'>{address}</td>
                   </tr>
                 )}
                 {phone && (
                   <tr>
-                    <td className='text-sm text-neutral-400 w-20'>聯絡電話：</td>
+                    <td className='text-sm text-neutral-400 w-24 md:w-28'>{`${locale.table.phone}${colon}`}</td>
                     <td className='font-bold'>{phone}</td>
                   </tr>
                 )}
                 {email && (
                   <tr>
-                    <td className='text-sm text-neutral-400 w-20'>電子郵件：</td>
+                    <td className='text-sm text-neutral-400 w-24 md:w-28'>{`${locale.table.email}${colon}`}</td>
                     <td className='font-bold'>{email}</td>
                   </tr>
                 )}
                 {hours && (
                   <tr>
-                    <td className='text-sm text-neutral-400 w-20'>營業時間：</td>
-                    <td className='font-bold'>週一到週五 9:00 ~ 18:00，國定假日公休</td>
+                    <td className='text-sm text-neutral-400 w-24 md:w-28'>{`${locale.table.hours}${colon}`}</td>
+                    <td className='font-bold'>{hours}</td>
                   </tr>
                 )}
               </tbody>
@@ -141,12 +154,12 @@ export default function ContactUs() {
             {/* 社群連結 */}
             <div className='flex items-center space-x-4 select-none'>
               <Link href={instagram} target='_blank' rel='noopener noreferrer' className='hover:text-white underline underline-offset-4 flex flex-row gap-2 items-center hover:-translate-y-0.5 transition-all duration-300 ease-in-out'>
-                <img src='/ig-logo.png' className='size-8' />
-                <span className='text-sm'>Instagram</span>
+                <img src='/ig-logo.png' alt='Instagram' className='size-8' />
+                <span className='text-sm'>{locale.links.instagram}</span>
               </Link>
               <Link href={facebook} target='_blank' rel='noopener noreferrer' className='hover:text-white underline underline-offset-4 flex flex-row gap-2 items-center hover:-translate-y-0.5 transition-all duration-300 ease-in-out'>
-                <img src='/fb-logo.png' className='size-8' />
-                <span className='text-sm'>Facebook</span>
+                <img src='/fb-logo.png' alt='Facebook' className='size-8' />
+                <span className='text-sm'>{locale.links.facebook}</span>
               </Link>
             </div>
 
