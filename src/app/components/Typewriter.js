@@ -69,6 +69,15 @@ function revealContent(content, count) {
   return revealChildren(content, count);
 }
 
+export function startTypewriter(r, delay = 0, fn = 'start', ...args) {
+  if (!r) return;
+  if (delay <= 0) {
+    r.current?.[fn]?.(...args);
+  } else {
+    setTimeout(() => r.current?.[fn]?.(...args), delay);
+  }
+};
+
 /**
  * 用於格式化內容的打字機元件（傳入 children）
  */
@@ -108,7 +117,7 @@ const Typewriter = forwardRef(
       content,
       speed = 50,
       className = '',
-      onDone = () => {},
+      onDone = () => { },
       onlyContent = false,
     },
     ref

@@ -262,7 +262,7 @@ export default function HomePage() {
     });
 
   return (
-    <main ref={animatorRef} className='relative w-full min-h-[400lvh] text-white flex flex-col'>
+    <main ref={animatorRef} className='relative w-full min-h-[400lvh] text-white flex flex-col bg-neutral-900'>
       {/* 封面 */}
       <section className='min-h-[200lvh]'>
         {/* <div

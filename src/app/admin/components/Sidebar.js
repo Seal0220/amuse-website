@@ -16,18 +16,18 @@ export default function Sidebar() {
   return (
     <aside className='w-60 h-screen bg-neutral-950 flex flex-col border-r border-t border-white/15'>
       <div className='p-4 text-xl font-semibold border-b border-neutral-800 tracking-wide'>
-        後台管理
+        管理後台
       </div>
       <nav className='flex-1 overflow-y-auto'>
         {links.map(({ href, label }) => (
           <Link
             key={href}
             href={href}
-            className={`block px-5 py-3 text-base hover:bg-neutral-800 transition-colors ${
-              path.startsWith(href)
+            className={`block px-5 py-3 text-base hover:bg-neutral-800 transition-colors 
+            ${path.startsWith(href)
                 ? 'bg-neutral-800 text-white'
                 : 'text-neutral-400 hover:text-white'
-            }`}
+              }`}
           >
             {label}
           </Link>

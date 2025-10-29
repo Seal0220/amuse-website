@@ -3,16 +3,25 @@ import React, { useEffect, useRef, forwardRef, useImperativeHandle } from 'react
 import { deg2rad, normRad, nearestAngle } from '@/app/functions/utils';
 import { useRouter } from 'next/navigation';
 
-// 在點上定位：點本身做 rotate + translate；label 為點的子元素，抵消旋轉並向下位移
+// 在點上定位：點本身做 rotate + translate；子元素以 --dot-rotate 抵銷旋轉
 const setDotAtAngle = (dot, angleRad, radiusPx) => {
-  // 讓點移到弧上的位置
+  // 主體：旋轉到角度並位移
   dot.style.transform =
     `translate(-50%, -50%) rotate(${angleRad}rad) translate(${radiusPx}px, 0)`;
 
-  // 子元素 label：抵消旋轉 + 往「Y 下方」挪動
+  // 供子元素抵銷父旋轉
+  dot.style.setProperty('--dot-rotate', `${-angleRad}rad`);
+
+  // label 位置（抵銷旋轉 + 下移）
   const label = dot.label;
   if (label) {
-    label.style.transform = `translate(-50%, -50%) rotate(${-angleRad}rad) translate(0, calc(50px))`;
+    label.style.transform = `translate(-50%, -50%) rotate(var(--dot-rotate)) translate(0, 50px)`;
+  }
+
+  // 圖片內層（抵銷旋轉）
+  const inner = dot.inner;
+  if (inner) {
+    inner.style.transform = `rotate(var(--dot-rotate))`;
   }
 };
 
@@ -105,7 +114,7 @@ const WorkDots = forwardRef(function WorkDots(
     centerVoidHalfDeg = 5,
     keepCenter = false,
     hoverSize = 40,
-    worksByYear = [],  // [[{slug,title}, ...], ...]，索引與 years 一致（非 CENTER）
+    worksByYear = [],  // [[{slug,title,images}, ...], ...]，索引與 years 一致（非 CENTER）
     labelOffset = 18,  // 文字相對點中心的向下位移（px）
   },
   apiRef
@@ -157,6 +166,7 @@ const WorkDots = forwardRef(function WorkDots(
         const work = works[j];
         const href = work?.slug ? `/${lang}/works/public-art/${encodeURIComponent(work.slug)}` : null;
         const labelText = pickTitle(work, lang);
+        const img = work?.images?.[0] || '';
 
         const angle = minRad + Math.random() * (maxRad - minRad);
 
@@ -181,6 +191,18 @@ const WorkDots = forwardRef(function WorkDots(
         dot.dataset.state = 'inactive'; // active/inactive
         dot.dataset.hover = '0';        // 0/1
         if (href) dot.dataset.href = href;
+        if (img) dot.dataset.img = img;
+
+        // ====== inner（子，專放圖片，抵銷旋轉） ======
+        const inner = document.createElement('div');
+        inner.className = 'absolute inset-0 rounded-full pointer-events-none transition-all duration-400 will-change-opacity';
+        inner.style.transform = 'rotate(var(--dot-rotate))';
+        inner.style.backgroundSize = 'cover';
+        inner.style.backgroundPosition = 'center';
+        inner.style.backgroundRepeat = 'no-repeat';
+        inner.style.opacity = '0';
+        dot.appendChild(inner);
+        dot.inner = inner;
 
         // ====== label（子） ======
         const label = document.createElement('span');
@@ -195,8 +217,8 @@ const WorkDots = forwardRef(function WorkDots(
         dot.appendChild(label);
         dot.label = label;
 
-        // 定位（點與其子 label）
-        setDotAtAngle(dot, angle, radius, labelOffset);
+        // 定位（點與其子元素）
+        setDotAtAngle(dot, angle, radius);
         ringNode.appendChild(dot);
         dots.push(dot);
 
@@ -267,7 +289,7 @@ const WorkDots = forwardRef(function WorkDots(
     };
   }, [lang, years.length, JSON.stringify(worksByYear)]);
 
-  // 每幀對「第 i 圈」更新（命中則重排與顯示標籤，否則還原並隱藏標籤）
+  // 更新每圈的點狀態
   useImperativeHandle(apiRef, () => ({
     updateRing(i, { atCrestWindow, radius: radiusOverride }) {
       const workDots = workDotsGroupRef.current[i];
@@ -276,6 +298,7 @@ const WorkDots = forwardRef(function WorkDots(
       const parsed = Number(workDots[0]?.dataset.radius ?? '0');
       const radius = (radiusOverride ?? (Number.isFinite(parsed) ? parsed : 0));
 
+      // ====== 放大年份軌道階段 ======
       if (atCrestWindow) {
         layoutDots(workDots, radius, basicAxisDeg, gapPx, {
           centerVoidHalfDeg,
@@ -284,7 +307,7 @@ const WorkDots = forwardRef(function WorkDots(
 
         workDots.forEach(dot => {
           const ang = parseFloat(dot.dataset.curAngle || dot.dataset.baseAngle || '0');
-          setDotAtAngle(dot, ang, radius, labelOffset);
+          setDotAtAngle(dot, ang, radius);
 
           dot.dataset.state = 'active';
           const hovered = dot.dataset.hover === '1';
@@ -294,16 +317,33 @@ const WorkDots = forwardRef(function WorkDots(
           dot.style.height = `${size}px`;
           dot.style.filter = 'drop-shadow(0 0 32px rgba(255,255,255,0.9))';
           dot.style.cursor = 'pointer';
+          dot.style.transition = 'all 0.5s ease';
 
-          if (dot.label) dot.label.style.opacity = '1'; // 淡入顯示
+          // === 圖片淡入到 inner ===
+          const imgUrl = dot.dataset.img || '';
+          const inner = dot.inner;
+          if (inner) {
+            if (imgUrl) {
+              inner.style.backgroundImage = `url("${imgUrl}")`;
+              requestAnimationFrame(() => { inner.style.opacity = '1'; });
+            } else {
+              inner.style.opacity = '0';
+              inner.style.backgroundImage = 'none';
+            }
+          }
+
+          if (dot.label) dot.label.style.opacity = '1';
         });
-      } else {
+      }
+
+      // ====== 離開年份軌道階段 ======
+      else {
         workDots.forEach((dot) => {
           const baseA = parseFloat(dot.dataset.baseAngle || '0');
           const curA = parseFloat(dot.dataset.curAngle || String(baseA));
           const tgt = nearestAngle(curA, baseA);
           dot.dataset.curAngle = String(tgt);
-          setDotAtAngle(dot, tgt, radius, labelOffset);
+          setDotAtAngle(dot, tgt, radius);
 
           dot.dataset.state = 'inactive';
           const baseSz = Number(dot.dataset.baseSize || String(baseSize));
@@ -314,8 +354,22 @@ const WorkDots = forwardRef(function WorkDots(
           dot.style.height = `${size}px`;
           dot.style.filter = 'drop-shadow(0 0 12px rgba(255,255,255,0.7))';
           dot.style.cursor = 'default';
+          dot.style.transition = 'all 0.5s ease';
 
-          if (dot.label) dot.label.style.opacity = '0'; // 淡出
+          // === 圖片淡出（inner 清空） ===
+          const inner = dot.inner;
+          if (inner) {
+            const clearBg = () => {
+              // 只在真的透明時清空，避免中途又被啟用
+              if (getComputedStyle(inner).opacity === '0') {
+                inner.style.backgroundImage = 'none';
+              }
+            };
+            inner.addEventListener('transitionend', clearBg, { once: true });
+            inner.style.opacity = '0';
+          }
+
+          if (dot.label) dot.label.style.opacity = '0';
         });
       }
     }

@@ -1,13 +1,25 @@
 'use client';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Planet from './Planet';
+import Typewriter from '@/app/components/Typewriter';
 
 export default function ExhibitionSpace() {
   const router = useRouter();
   const { lang } = useParams();
   const [works, setWorks] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // ---- Title Typewriter refs ----
+  const titleMainRef = useRef(null); // 展示空間
+  const titleSubRef = useRef(null);  // Exhibition Space
+
+  useEffect(() => {
+    titleMainRef.current?.reset?.();
+    titleSubRef.current?.reset?.();
+    titleMainRef.current?.start?.();
+    titleSubRef.current?.start?.();
+  }, []);
 
   useEffect(() => {
     let canceled = false;
@@ -27,11 +39,15 @@ export default function ExhibitionSpace() {
   }, []);
 
   return (
-    <div className='relative w-full min-h-lvh bg-neutral-800 overflow-hidden'>
-      {/* 左上角文字區塊 */}
-      <div className='absolute left-[8%] top-[12%] text-white select-none z-[5]'>
-        <div className='text-4xl mb-1'>展示空間</div>
-        <div className='text-lg text-neutral-400'>Exhibition Space</div>
+    <div className='relative w-full min-h-lvh bg-neutral-950 overflow-hidden'>
+      {/* Title */}
+      <div className='fixed left-[8%] top-[14%] text-white select-none z-5 text-shadow-white text-shadow-[0_0_40px] pointer-events-none transition-all ease-in-out duration-500'>
+        <div className='text-4xl mb-1'>
+          <Typewriter ref={titleMainRef} speed={180} content='展示空間' />
+        </div>
+        <div className='text-lg text-neutral-400'>
+          <Typewriter ref={titleSubRef} speed={100} content='Exhibition Space' />
+        </div>
       </div>
 
       <div className={`bg-neutral-950 min-h-lvh flex flex-row items-center justify-center transition-opacity duration-250 ease-in-out ${loading ? 'opacity-0' : 'opacity-100'}`}>

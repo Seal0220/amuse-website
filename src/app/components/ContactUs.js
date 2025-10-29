@@ -99,7 +99,7 @@ export default function ContactUs() {
             <button
               type='submit'
               disabled={sending}
-              className='w-full py-3 rounded-full bg-white text-black font-medium hover:bg-neutral-200 hover:-translate-y-1 transition-all duration-300 ease-in-out cursor-pointer'
+              className='w-full py-3 rounded-full bg-white text-black font-medium select-none hover:bg-neutral-200 hover:-translate-y-1 transition-all duration-300 ease-in-out cursor-pointer'
             >
               {sending ? '送出中...' : locale.form.submit || 'Send'}
             </button>
@@ -139,7 +139,7 @@ export default function ContactUs() {
 
 
             {/* 社群連結 */}
-            <div className='flex items-center space-x-4'>
+            <div className='flex items-center space-x-4 select-none'>
               <Link href={instagram} target='_blank' rel='noopener noreferrer' className='hover:text-white underline underline-offset-4 flex flex-row gap-2 items-center hover:-translate-y-0.5 transition-all duration-300 ease-in-out'>
                 <img src='/ig-logo.png' className='size-8' />
                 <span className='text-sm'>Instagram</span>

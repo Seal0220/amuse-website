@@ -30,7 +30,7 @@ export default async function PublicArtPage({ params }) {
       <div className='relative'>
         {/* 用 Crossfade 包住 Work，slug 變動時會淡入 */}
         <Crossfade slug={currentSlug}>
-          <Work lang={lang} work={work} type={'public-art'}/>
+          <Work lang={lang} work={work} type={'public-art'} />
         </Crossfade>
       </div>
 

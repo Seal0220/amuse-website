@@ -4,6 +4,7 @@ import useAnimator from '@/app/hooks/useAnimator';
 import useBreathingNoise from '@/app/hooks/useBreathingNoise';
 import useAxisWobbleRef from '@/app/hooks/useAxisWobble';
 import WorkDots from './WorkDots';
+import Typewriter from '@/app/components/Typewriter';
 
 /**
  * 動態：一年一軌道、一作一點（public-art）
@@ -21,9 +22,6 @@ export default function PublicArt({ lang = 'zh' }) {
         const res = await fetch('/api/works?type=public-art', { cache: 'no-store' });
         if (!res.ok) throw new Error(await res.text());
         const pubs = await res.json();
-
-        // 只取 type === 'public-art'
-        // const pubs = (all || []).filter(w => (w.type || '') === 'public-art');
 
         // year 正規化（字串化，空的丟掉）
         const normalizeYear = (y) => {
@@ -181,8 +179,28 @@ export default function PublicArt({ lang = 'zh' }) {
     return () => { animator.stop(); };
   }, [years.length, pageProgress]);
 
+  // ==== Title: Typewriter（只在掛載時 reset + start）====
+  const titleMainRef = useRef(null);
+  const titleSubRef = useRef(null);
+  useEffect(() => {
+    titleMainRef.current?.reset?.();
+    titleSubRef.current?.reset?.();
+    titleMainRef.current?.start?.();
+    titleSubRef.current?.start?.();
+  }, []);
+
   return (
-    <div style={{ height: pageHeight }} className='min-h-lvh relative w-full bg-neutral-800'>
+    <div style={{ height: pageHeight }} className='min-h-lvh relative w-full bg-neutral-950'>
+      {/* Title */}
+      <div className='fixed left-[8%] top-[14%] text-white select-none z-5 text-shadow-white text-shadow-[0_0_40px] pointer-events-none transition-all ease-in-out duration-500'>
+        <div className='text-4xl mb-1'>
+          <Typewriter ref={titleMainRef} speed={180} content='公共藝術' />
+        </div>
+        <div className='text-lg text-neutral-400'>
+          <Typewriter ref={titleSubRef} speed={100} content='Public Art' />
+        </div>
+      </div>
+
       <div
         ref={animatorRef}
         style={{ opacity: 0 }}
@@ -221,7 +239,6 @@ export default function PublicArt({ lang = 'zh' }) {
             gapPx={96}
             centerVoidHalfDeg={5}
             keepCenter={false}
-            // 新增：傳入每年作品列表（不含 CENTER）
             worksByYear={worksByYear}
           />
 
