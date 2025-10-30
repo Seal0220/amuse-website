@@ -589,15 +589,15 @@ export default function WorkPage() {
   return (
     <div
       ref={worksRef}
-      className='relative w-full h-lvh bg-neutral-950 overflow-hidden transition-all ease-in-out duration-500'
+      className='relative w-full h-[90vh] sm:h-lvh bg-neutral-950 overflow-hidden transition-all ease-in-out duration-500'
       style={{ opacity: 0 }}
     >
       {/* Title */}
-      <div className='fixed left-[8%] top-[14%] text-white select-none z-5 text-shadow-white text-shadow-[0_0_40px] pointer-events-none'>
-        <div className='text-4xl mb-1 h-10'>
+      <div className='fixed left-1/2 sm:left-[8%] top-24 sm:top-[14%] -translate-x-1/2 sm:translate-x-0 text-center sm:text-left text-white select-none z-5 text-shadow-white text-shadow-[0_0_40px] pointer-events-none px-4 sm:px-0'>
+        <div className='text-3xl sm:text-4xl mb-1 h-10'>
           <Typewriter ref={titleMainRef} speed={240} content={categoryHeading} />
         </div>
-        <div className='text-lg text-neutral-400'>
+        <div className='text-base sm:text-lg text-neutral-400'>
           <Typewriter ref={titleSubRef} speed={200} content={categorySubheading} />
         </div>
       </div>

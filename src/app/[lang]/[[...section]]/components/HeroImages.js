@@ -25,13 +25,13 @@ export default function HeroImages({ indexRef }) {
   return (
     <div
       ref={indexRef}
-      className="fixed z-0 w-full h-lvh translate-y-0 flex items-center justify-center bg-gray-300 overflow-hidden transition ease-in-out duration-500"
+      className="fixed z-0 w-full h-[80vh] sm:h-lvh translate-y-0 flex items-center justify-center bg-gray-300 overflow-hidden transition ease-in-out duration-500"
     >
       {/* Hero 圖片輪播 */}
       <ImageSlider images={images} initImage={'/hero/hero-01.png'} />
 
       {/* 底部漸層區塊 */}
-      <div className="absolute flex items-center justify-center p-12 pt-18 box-border bottom-0 w-full h-20 bg-gradient-to-t from-5% from-neutral-900 via-70% via-neutral-900/70 to-100% to-transparent" />
+      <div className="absolute flex items-center justify-center p-8 sm:p-12 pt-18 box-border bottom-0 w-full h-16 sm:h-20 bg-gradient-to-t from-5% from-neutral-900 via-70% via-neutral-900/70 to-100% to-transparent" />
     </div>
   );
 }

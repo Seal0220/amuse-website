@@ -322,9 +322,9 @@ export default function HomePage() {
     });
 
   return (
-    <main ref={animatorRef} className='relative w-full min-h-[400lvh] text-white flex flex-col bg-neutral-900'>
+    <main ref={animatorRef} className='relative w-full min-h-screen sm:min-h-[400lvh] text-white flex flex-col bg-neutral-900'>
       {/* 封面 */}
-      <section className='min-h-[200lvh]'>
+      <section className='min-h-[120vh] sm:min-h-[200lvh]'>
         {/* <div
           ref={indexRef}
           className='fixed -z-10 w-full h-lvh translate-y-0 flex items-center justify-center bg-gray-300 overflow-hidden transition ease-in-out duration-500'
@@ -340,14 +340,14 @@ export default function HomePage() {
       <div
         ref={infoRef}
         style={{ transform: 'translate(-100%, 40lvh)' }}
-        className='fixed z-20 top-0 left-0 drop-shadow-xl drop-shadow-black/70 max-w-[80vw] transition-all ease-in-out duration-500'
+        className='fixed z-20 top-16 sm:top-0 left-0 right-0 sm:right-auto drop-shadow-xl drop-shadow-black/70 w-full max-w-[92vw] sm:max-w-[80vw] mx-auto px-4 sm:px-0 text-center sm:text-left transition-all ease-in-out duration-500'
       >
         <Typewriter
           ref={infoTypewriter1Ref}
           contentKey={introContent?.headline ?? currentLocale}
           content={(<p>{introContent?.headline}</p>)}
           speed={50}
-          className='flex flex-col gap-4 drop-shadow-md drop-shadow-white/70 font-extrabold'
+          className='flex flex-col gap-3 sm:gap-4 drop-shadow-md drop-shadow-white/70 font-extrabold'
         />
 
         <div
@@ -365,19 +365,19 @@ export default function HomePage() {
               </>
             )}
             speed={currentLocale === 'zh' ? 40 : 20}
-            className='flex flex-col gap-4 drop-shadow-md drop-shadow-white/70 font-extrabold mt-4'
+            className='flex flex-col gap-3 sm:gap-4 drop-shadow-md drop-shadow-white/70 font-extrabold mt-4 text-sm sm:text-base'
           />
         </div>
       </div>
 
       {/* 我們的團隊 */}
-      <section className='min-h-[100lvh]'>
+      <section className='min-h-[110vh] sm:min-h-[100lvh]'>
         <div
           ref={aboutUsRef}
           style={{ transform: 'translateY(calc(100lvh + 5rem))' }}
-          className='fixed z-10 top-0 w-full min-h-lvh flex justify-center bg-neutral-950 p-40 transition ease-in-out duration-700'
+          className='fixed z-10 top-0 w-full min-h-[90vh] sm:min-h-lvh flex justify-center bg-neutral-950 p-12 sm:p-40 transition ease-in-out duration-700'
         >
-          <h1 className='absolute z-10 right-0 text-[12rem] font-bold text-right select-none'>
+          <h1 className='absolute z-10 right-1/2 sm:right-0 translate-x-1/2 sm:translate-x-0 text-5xl sm:text-[12rem] font-bold text-center sm:text-right select-none px-4 sm:px-0'>
             <Typewriter
               ref={memberTypewriter1Ref}
               speed={500}
@@ -385,14 +385,14 @@ export default function HomePage() {
             />
           </h1>
 
-          <div className='absolute -top-20 w-full h-20 bg-gradient-to-t from-5% from-neutral-950 via-50% via-neutral-950/70 to-100% to-transparent' />
+          <div className='absolute -top-10 sm:-top-20 w-full h-12 sm:h-20 bg-gradient-to-t from-5% from-neutral-950 via-50% via-neutral-950/70 to-100% to-transparent' />
 
           <div
             ref={memberGroupRef}
             style={{ transform: 'translateY(75lvh)' }}
-            className='absolute z-6 top-0 transition ease-in-out duration-700'
+            className='absolute z-6 top-0 transition ease-in-out duration-700 px-4 sm:px-0'
           >
-            <div className='flex flex-row justify-center items-center gap-32'>
+            <div className='flex flex-col sm:flex-row justify-center items-center gap-10 sm:gap-32'>
               {members.map((member, i) => {
                 const name = pickLocalized(currentLocale, member?.name, teamLocale?.untitled ?? '');
                 const education = pickLocalized(currentLocale, member?.education);
@@ -416,7 +416,7 @@ export default function HomePage() {
           {/* Circles */}
           <div
             ref={circleGroupRef}
-            className='absolute z-5 flex items-center justify-center transition ease-in-out duration-700 pointer-events-none'
+            className='absolute z-5 flex items-center justify-center transition ease-in-out duration-700 pointer-events-none scale-75 sm:scale-100'
           >
             <div ref={circle1Ref} className='absolute border border-white/50 size-40 rounded-full shadow-[0_0_64px_8px] shadow-white/20 transition ease-in-out duration-200' />
             <div ref={circle2Ref} className='absolute border border-white/50 size-80 rounded-full shadow-[0_0_64px_8px] shadow-white/20 transition ease-in-out duration-300' />

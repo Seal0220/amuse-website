@@ -64,7 +64,7 @@ export default function ContactUs() {
 
   if (loading) {
     return (
-      <section className='bg-neutral-900 text-white py-40 px-6'>
+      <section className='bg-neutral-900 text-white py-20 sm:py-32 md:py-40 px-4 sm:px-6'>
         <div className='max-w-6xl mx-auto text-center opacity-60'>
           {locale.messages.loading}
         </div>
@@ -86,26 +86,26 @@ export default function ContactUs() {
   const messageClass = msgKey === 'error' ? 'text-red-400' : 'text-green-400';
 
   return (
-    <section className='bg-neutral-900 text-white py-40 px-6'>
+    <section className='bg-neutral-900 text-white py-20 sm:py-32 md:py-40 px-4 sm:px-6'>
       <div className='max-w-6xl mx-auto'>
         {/* 標題 */}
-        <div className='text-center mb-20'>
-          <h2 className='text-3xl md:text-4xl font-semibold tracking-wide'>{locale.title}</h2>
+        <div className='text-center mb-12 sm:mb-20'>
+          <h2 className='text-2xl sm:text-3xl md:text-4xl font-semibold tracking-wide'>{locale.title}</h2>
         </div>
 
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-10'>
+        <div className='grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10'>
           {/* 表單 */}
-          <form className='space-y-4' onSubmit={handleSubmit}>
-            <input name='company' type='text' placeholder={locale.form.company} className='w-full p-3 rounded-full bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition' />
-            <input name='person' type='text' placeholder={locale.form.person} className='w-full p-3 rounded-full bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition' required />
-            <input name='phone' type='text' placeholder={locale.form.phone} className='w-full p-3 rounded-full bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition' />
-            <input name='email' type='email' placeholder={locale.form.email} className='w-full p-3 rounded-full bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition' required />
-            <input name='address' type='text' placeholder={locale.form.address} className='w-full p-3 rounded-full bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition' />
-            <textarea name='message' rows='5' placeholder={locale.form.message} className='w-full p-3 rounded-3xl bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition' required />
+          <form className='space-y-3 sm:space-y-4' onSubmit={handleSubmit}>
+            <input name='company' type='text' placeholder={locale.form.company} className='w-full p-3 rounded-full bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition text-sm sm:text-base' />
+            <input name='person' type='text' placeholder={locale.form.person} className='w-full p-3 rounded-full bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition text-sm sm:text-base' required />
+            <input name='phone' type='text' placeholder={locale.form.phone} className='w-full p-3 rounded-full bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition text-sm sm:text-base' />
+            <input name='email' type='email' placeholder={locale.form.email} className='w-full p-3 rounded-full bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition text-sm sm:text-base' required />
+            <input name='address' type='text' placeholder={locale.form.address} className='w-full p-3 rounded-full bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition text-sm sm:text-base' />
+            <textarea name='message' rows='5' placeholder={locale.form.message} className='w-full p-3 rounded-3xl bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition text-sm sm:text-base' required />
             <button
               type='submit'
               disabled={sending}
-              className='w-full py-3 rounded-full bg-white text-black font-medium select-none hover:bg-neutral-200 hover:-translate-y-1 transition-all duration-300 ease-in-out cursor-pointer'
+              className='w-full py-3 rounded-full bg-white text-black font-medium select-none hover:bg-neutral-200 hover:-translate-y-1 transition-all duration-300 ease-in-out cursor-pointer text-sm sm:text-base'
             >
               {sending ? locale.messages.sending : (locale.form.submit || 'Send')}
             </button>
@@ -114,7 +114,7 @@ export default function ContactUs() {
 
           {/* 右側聯絡資訊 */}
           <div className='flex flex-col gap-4 text-neutral-300'>
-            <table className='w-full text-left border-separate border-spacing-y-2'>
+            <table className='w-full text-left border-separate border-spacing-y-2 text-sm sm:text-base'>
               <tbody>
                 {address && (
                   <tr>
@@ -145,7 +145,7 @@ export default function ContactUs() {
 
 
             {/* 社群連結 */}
-            <div className='flex items-center space-x-4 select-none'>
+            <div className='flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 select-none'>
               <Link href={instagram} target='_blank' rel='noopener noreferrer' className='hover:text-white underline underline-offset-4 flex flex-row gap-2 items-center hover:-translate-y-0.5 transition-all duration-300 ease-in-out'>
                 <img src='/ig-logo.png' alt='Instagram' className='size-8' />
                 <span className='text-sm'>{locale.links.instagram}</span>
@@ -157,7 +157,7 @@ export default function ContactUs() {
             </div>
 
             {/* 地圖 */}
-            <div className='mt-4 flex-1'>
+            <div className='mt-4 flex-1 w-full'>
               <iframe
                 title='map'
                 src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d909.2531978113798!2d120.78860447540106!3d24.276283759884297!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x34691b00503d5bcf%3A0x48dee2b65488ad76!2z6Zi_5pyo5Y-4!5e0!3m2!1szh-TW!2stw!4v1761664194529!5m2!1szh-TW!2stw'
@@ -165,7 +165,7 @@ export default function ContactUs() {
                 allowFullScreen=''
                 loading='lazy'
                 referrerPolicy='no-referrer-when-downgrade'
-                className='rounded-3xl h-full outline outline-white/15'
+                className='rounded-3xl h-64 sm:h-full outline outline-white/15'
               ></iframe>
             </div>
           </div>

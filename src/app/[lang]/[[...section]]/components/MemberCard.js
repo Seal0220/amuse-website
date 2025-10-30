@@ -33,18 +33,18 @@ const MemberCard = forwardRef(({ name, img, details }, ref) => {
   return (
     <div
       ref={cardRef}
-      className='flex flex-col items-center gap-4 transition-all ease-in-out duration-500'
+      className='flex flex-col items-center gap-3 sm:gap-4 transition-all ease-in-out duration-500'
     >
       <img
         src={img}
         alt={name}
-        className='size-40 min-w-40 min-h-40 object-cover rounded-full border-2 border-white outline-2 outline-offset-8 shadow-[0_0_64px_8px] shadow-white/20 select-none pointer-events-none transition-all ease-in-out duration-500'
+        className='size-32 sm:size-40 min-w-32 min-h-32 sm:min-w-40 sm:min-h-40 object-cover rounded-full border-2 border-white outline-2 outline-offset-8 shadow-[0_0_64px_8px] shadow-white/20 select-none pointer-events-none transition-all ease-in-out duration-500'
       />
 
-      <div className={`absolute top-40 mt-4 w-80 h-60 p-4 flex flex-col gap-4 items-center drop-shadow-md drop-shadow-white/70 transition-all ease-in-out duration-500`}>
-        <div className={`text-xl font-bold text-center transition-all ease-in-out duration-500 ${showDetail}`}>{name}</div>
+      <div className={`absolute top-32 sm:top-40 mt-4 w-64 sm:w-80 min-h-[13rem] sm:h-60 p-4 flex flex-col gap-3 sm:gap-4 items-center drop-shadow-md drop-shadow-white/70 transition-all ease-in-out duration-500`}>
+        <div className={`text-lg sm:text-xl font-bold text-center transition-all ease-in-out duration-500 ${showDetail}`}>{name}</div>
         <div className={`h-px w-8 bg-white transition-all ease-in-out duration-600 ${showDetail}`} />
-        <div className={`w-full flex flex-col gap-2 text-center transition-all ease-in-out duration-700 ${showDetail}`}>
+        <div className={`w-full flex flex-col gap-2 text-center transition-all ease-in-out duration-700 text-sm sm:text-base ${showDetail}`}>
           <div>{educationLabel}{colon} {educationText}</div>
           <div>{specialtyLabel}{colon} {specialtyText}</div>
         </div>

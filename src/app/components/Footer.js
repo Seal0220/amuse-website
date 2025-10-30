@@ -33,9 +33,9 @@ export default function Footer() {
   const facebook = contact?.facebook || '#';
 
   return (
-    <footer className='relative pt-8 pb-10 w-full z-100 flex flex-col items-center gap-2 text-white bg-neutral-950 border-y border-neutral-600'>
-      <div className='mx-auto flex flex-row gap-2 items-center justify-center'>
-        <div className='flex flex-row gap-4 items-center mr-2'>
+    <footer className='relative pt-6 sm:pt-8 pb-10 w-full z-100 flex flex-col items-center gap-4 text-white bg-neutral-950 border-y border-neutral-600 px-4 sm:px-0'>
+      <div className='mx-auto flex flex-col sm:flex-row gap-4 sm:gap-2 items-center justify-center text-center sm:text-left'>
+        <div className='flex flex-row gap-4 items-center sm:mr-2'>
           <Link href={instagram} target='_blank' rel='noopener noreferrer' className='flex flex-row gap-2 items-center hover:-translate-y-0.5 transition-all duration-300 ease-in-out'>
             <img src='/ig-logo.png' alt='Instagram' className='size-8' />
           </Link>
@@ -44,12 +44,12 @@ export default function Footer() {
           </Link>
         </div>
         <div className='flex items-center'>
-          <img src='/Amuse-LOGO-w.png' alt={headerLocale.company_name} className='h-12 object-contain select-none pointer-events-none' />
+          <img src='/Amuse-LOGO-w.png' alt={headerLocale.company_name} className='h-10 sm:h-12 object-contain select-none pointer-events-none' />
         </div>
         <div className='flex flex-col gap-1'>
-          <div className='text-xs font-bold flex flex-row gap-2 items-center select-auto'>
+          <div className='text-xs font-bold flex flex-col sm:flex-row gap-1 sm:gap-2 items-center select-auto'>
             <span>{email}</span>
-            <div className='h-3 w-px bg-white/70 mt-0.5' />
+            <div className='hidden sm:block h-3 w-px bg-white/70 mt-0.5' />
             <span>{address}</span>
           </div>
           <div className='text-xs text-white/85 font-thin select-none'>
@@ -57,7 +57,7 @@ export default function Footer() {
           </div>
         </div>
       </div>
-      <div className='text-xs text-white/50 font-thin select-auto'>
+      <div className='text-xs text-white/50 font-thin select-auto text-center'>
         {footerLocale?.credits}
       </div>
     </footer>
