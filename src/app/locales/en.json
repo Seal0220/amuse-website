@@ -29,11 +29,11 @@
       "types": {
         "publicArt": {
           "title": "Public Art",
-          "subtitle": "Public Art"
+          "subtitle": "Light, Structure, Kinetic Installations"
         },
         "exhibitionSpace": {
           "title": "Exhibition Space",
-          "subtitle": "Exhibition Space"
+          "subtitle": "Site, Display, Spatial Design"
         }
       }
     }
@@ -67,8 +67,8 @@
         "address": "Address",
         "phone": "Phone",
         "email": "Email",
-        "hours": "Business Hours",
-        "hoursDefault": "Mon–Fri 9:00 AM – 6:00 PM (closed on national holidays)"
+        "hours": "Business \nHours",
+        "hoursDefault": "Mon-Fri 9:00 AM - 6:00 PM \n(closed on national holidays)"
       },
       "links": {
         "instagram": "Instagram",

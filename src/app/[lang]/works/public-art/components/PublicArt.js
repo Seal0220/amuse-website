@@ -201,10 +201,10 @@ export default function PublicArt({ lang = 'zh' }) {
       {/* Title */}
       <div className='fixed left-[8%] top-[14%] text-white select-none z-5 text-shadow-white text-shadow-[0_0_40px] pointer-events-none transition-all ease-in-out duration-500'>
         <div className='text-4xl mb-1'>
-          <Typewriter ref={titleMainRef} speed={180} content={titleMain} />
+          <Typewriter ref={titleMainRef} speed={150} content={titleMain} />
         </div>
         <div className='text-lg text-neutral-400'>
-          <Typewriter ref={titleSubRef} speed={100} content={titleSub} />
+          <Typewriter ref={titleSubRef} speed={60} content={titleSub} />
         </div>
       </div>
 

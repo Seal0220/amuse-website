@@ -43,3 +43,13 @@ export function nearestAngle(from, to) {
   while (t - from <= -Math.PI) { t += TWO; }
   return t;
 };
+
+
+export function pickLocalized(currentLocale, value, fallback = '') {
+  if (value == null) return fallback;
+  if (typeof value === 'string') return value || fallback;
+  if (typeof value === 'object') {
+    return value[currentLocale] ?? value.zh ?? value.en ?? Object.values(value)[0] ?? fallback;
+  }
+  return fallback;
+};

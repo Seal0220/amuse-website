@@ -4,8 +4,8 @@ import { usePathname } from 'next/navigation';
 import useLocale from '@/app/hooks/useLocale';
 import useAnimator from '@/app/hooks/useAnimator';
 import useSectionPathSync from './hooks/useSectionPathSync';
+import { pickLocalized } from '@/app/functions/utils';
 
-import Header from '@/app/components/Header';
 import ContactUs from '@/app/components/ContactUs';
 import Typewriter from '@/app/components/Typewriter';
 import MemberCard from './components/MemberCard';
@@ -66,15 +66,6 @@ export default function HomePage() {
   const membersRef = useRef([]);
   membersRef.current = members.map((_, i) => membersRef.current[i] ?? React.createRef());
   const memberTypewriter1Ref = useRef(null);
-
-  const pickLocalized = (value, fallback = teamLocale?.missing ?? '') => {
-    if (value == null) return fallback;
-    if (typeof value === 'string') return value || fallback;
-    if (typeof value === 'object') {
-      return value[currentLocale] ?? value.zh ?? value.en ?? Object.values(value)[0] ?? fallback;
-    }
-    return fallback;
-  };
 
   const circleGroupRef = useRef(null);
   const circle1Ref = useRef(null);
@@ -349,9 +340,9 @@ export default function HomePage() {
           >
             <div className='flex flex-row justify-center items-center gap-32'>
               {members.map((member, i) => {
-                const name = pickLocalized(member?.name, teamLocale?.untitled ?? '');
-                const education = pickLocalized(member?.education);
-                const specialty = pickLocalized(member?.specialty);
+                const name = pickLocalized(currentLocale, member?.name, teamLocale?.untitled ?? '');
+                const education = pickLocalized(currentLocale, member?.education);
+                const specialty = pickLocalized(currentLocale, member?.specialty);
                 return (
                   <MemberCard
                     key={member?.id ?? i}

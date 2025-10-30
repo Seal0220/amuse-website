@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import useLocale from '@/app/hooks/useLocale';
+import { pickLocalized } from '@/app/functions/utils';
+
 
 export default function Footer() {
   const { currentLocale, localeDict } = useLocale();
@@ -23,16 +25,8 @@ export default function Footer() {
     load();
   }, []);
 
-  const pickLocalized = (value) => {
-    if (value == null) return '';
-    if (typeof value === 'string') return value;
-    if (typeof value === 'object') {
-      return value[currentLocale] ?? value.zh ?? value.en ?? Object.values(value)[0] ?? '';
-    }
-    return '';
-  };
 
-  const address = pickLocalized(contact?.address);
+  const address = pickLocalized(currentLocale, contact?.address);
   const phone = contact?.phone || '';
   const email = contact?.email || '';
   const instagram = contact?.instagram || '#';

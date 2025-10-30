@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import useLocale from '@/app/hooks/useLocale';
 import Link from 'next/link';
+import { pickLocalized } from '@/app/functions/utils';
 
 export default function ContactUs() {
   const { localeDict, currentLocale } = useLocale();
@@ -12,14 +13,6 @@ export default function ContactUs() {
   const [sending, setSending] = useState(false);
   const [msgKey, setMsgKey] = useState(null);
 
-  const pickLocalized = (value) => {
-    if (value == null) return '';
-    if (typeof value === 'string') return value;
-    if (typeof value === 'object') {
-      return value[currentLocale] ?? value.zh ?? value.en ?? Object.values(value)[0] ?? '';
-    }
-    return '';
-  };
 
   // === 取得聯絡資訊 ===
   useEffect(() => {
@@ -79,7 +72,7 @@ export default function ContactUs() {
     );
   }
 
-  const address = pickLocalized(contact?.address);
+  const address = pickLocalized(currentLocale, contact?.address);
   const phone = contact?.phone || '';
   const email = contact?.email || '';
   const hoursRange = contact?.hours
@@ -125,26 +118,26 @@ export default function ContactUs() {
               <tbody>
                 {address && (
                   <tr>
-                    <td className='text-sm text-neutral-400 w-30'>{`${locale.table.address}${colon}`}</td>
+                    <td className='text-sm text-neutral-400 w-19'>{`${locale.table.address}${colon}`}</td>
                     <td className='font-bold'>{address}</td>
                   </tr>
                 )}
                 {phone && (
                   <tr>
-                    <td className='text-sm text-neutral-400 w-30'>{`${locale.table.phone}${colon}`}</td>
+                    <td className='text-sm text-neutral-400 w-19'>{`${locale.table.phone}${colon}`}</td>
                     <td className='font-bold'>{phone}</td>
                   </tr>
                 )}
                 {email && (
                   <tr>
-                    <td className='text-sm text-neutral-400 w-30'>{`${locale.table.email}${colon}`}</td>
+                    <td className='text-sm text-neutral-400 w-19'>{`${locale.table.email}${colon}`}</td>
                     <td className='font-bold'>{email}</td>
                   </tr>
                 )}
                 {hours && (
                   <tr>
-                    <td className='text-sm text-neutral-400 w-30'>{`${locale.table.hours}${colon}`}</td>
-                    <td className='font-bold'>{hours}</td>
+                    <td className='text-sm text-neutral-400 w-19 whitespace-pre-line'>{`${locale.table.hours}${colon}`}</td>
+                    <td className='font-bold whitespace-pre-line'>{`${locale.table.hoursDefault}`}</td>
                   </tr>
                 )}
               </tbody>
