@@ -364,7 +364,7 @@ export default function HomePage() {
                 ))}
               </>
             )}
-            speed={40}
+            speed={currentLocale === 'zh' ? 40 : 20}
             className='flex flex-col gap-4 drop-shadow-md drop-shadow-white/70 font-extrabold mt-4'
           />
         </div>

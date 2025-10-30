@@ -73,7 +73,7 @@
       "credits": "網站由 Chen Yiquan 與 Liao Xuan-Tang 建置。"
     },
     "Work": {
-      "listLabel": "作品列表",
+      "listLabel": "列表",
       "types": {
         "public-art": "公共藝術",
         "exhibition-space": "展示空間"

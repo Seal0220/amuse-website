@@ -73,7 +73,7 @@
       "credits": "Website developed by Chen Yiquan & Liao Xuan-Tang."
     },
     "Work": {
-      "listLabel": "Project List",
+      "listLabel": "List",
       "types": {
         "public-art": "Public Art",
         "exhibition-space": "Exhibition Space"
@@ -84,8 +84,8 @@
       "labels": {
         "location": "Location:",
         "medium": "Medium:",
-        "management": "Client / Organizer:",
-        "size": "Dimensions (cm):"
+        "management": "Organizer:",
+        "size": "Size (cm):"
       },
       "dimensions": {
         "length": "Length",
