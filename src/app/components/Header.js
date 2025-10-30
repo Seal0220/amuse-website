@@ -13,7 +13,6 @@ export default function Header() {
 
   const locale = localeDict.components.Header;
   const segs = pathname.split('/').filter(Boolean);
-  const lang = segs[0] || currentLocale || 'zh';
   const currentSection = segs[1] || 'home';
   const isInAnimatedPage =
     ['home', 'team', 'contact'].includes(currentSection) || segs.length <= 1;
@@ -35,7 +34,7 @@ export default function Header() {
     e.preventDefault();
     setMenuOpen(false);
 
-    const target = goal === 'home' ? `/${lang}` : `/${lang}/${goal}`;
+    const target = goal === 'home' ? `/${currentLocale}` : `/${currentLocale}/${goal}`;
 
     if (!isInAnimatedPage) {
       router.push(target);
@@ -52,7 +51,7 @@ export default function Header() {
 
   const goHome = () => {
     setMenuOpen(false);
-    router.replace(`/${lang}`);
+    router.replace(`/${currentLocale}`);
   };
 
   const toggleLang = () => {
@@ -81,28 +80,28 @@ export default function Header() {
         <nav className='hidden md:flex flex-row gap-10 pointer-events-auto pr-2 md:pr-8'>
           <div className='flex flex-row gap-8 lg:gap-20 text-lg tracking-wide items-center'>
             <a
-              href={`/${lang}`}
+              href={`/${currentLocale}`}
               onClick={(e) => navigateSamePage(e, 'home')}
               className='hover:text-neutral-300 text-shadow-white hover:text-shadow-[0_0_24px] hover:-translate-y-1 text-nowrap transition-all duration-300 ease-in-out'
             >
               {locale.home}
             </a>
             <a
-              href={`/${lang}/team`}
+              href={`/${currentLocale}/team`}
               onClick={(e) => navigateSamePage(e, 'team')}
               className='hover:text-neutral-300 text-shadow-white hover:text-shadow-[0_0_24px] hover:-translate-y-1 text-nowrap transition-all duration-300 ease-in-out'
             >
               {locale.team}
             </a>
             <a
-              href={`/${lang}/contact`}
+              href={`/${currentLocale}/contact`}
               onClick={(e) => navigateSamePage(e, 'contact')}
               className='hover:text-neutral-300 text-shadow-white hover:text-shadow-[0_0_24px] hover:-translate-y-1 text-nowrap transition-all duration-300 ease-in-out'
             >
               {locale.contact}
             </a>
             <Link
-              href={`/${lang}/works`}
+              href={`/${currentLocale}/works`}
               className='hover:text-neutral-300 text-shadow-white hover:text-shadow-[0_0_24px] hover:-translate-y-1 text-nowrap transition-all duration-300 ease-in-out'
             >
               {locale.works}
@@ -153,28 +152,28 @@ export default function Header() {
         {/* 內容 */}
         <div className='w-full h-full flex flex-col items-center justify-center gap-8'>
           <a
-            href={`/${lang}`}
+            href={`/${currentLocale}`}
             onClick={(e) => navigateSamePage(e, 'home')}
             className='text-xl active:text-neutral-300 text-shadow-white active:text-shadow-[0_0_24px] active:-translate-y-1 text-nowrap transition-all duration-300 ease-in-out'
           >
             {locale.home}
           </a>
           <a
-            href={`/${lang}/team`}
+            href={`/${currentLocale}/team`}
             onClick={(e) => navigateSamePage(e, 'team')}
             className='text-xl active:text-neutral-300 text-shadow-white active:text-shadow-[0_0_24px] active:-translate-y-1 text-nowrap transition-all duration-300 ease-in-out'
           >
             {locale.team}
           </a>
           <a
-            href={`/${lang}/contact`}
+            href={`/${currentLocale}/contact`}
             onClick={(e) => navigateSamePage(e, 'contact')}
             className='text-xl active:text-neutral-300 text-shadow-white active:text-shadow-[0_0_24px] active:-translate-y-1 text-nowrap transition-all duration-300 ease-in-out'
           >
             {locale.contact}
           </a>
           <Link
-            href={`/${lang}/works`}
+            href={`/${currentLocale}/works`}
             onClick={() => setMenuOpen(false)}
             className='text-xl active:text-neutral-300 text-shadow-white active:text-shadow-[0_0_24px] active:-translate-y-1 text-nowrap transition-all duration-300 ease-in-out'
           >
