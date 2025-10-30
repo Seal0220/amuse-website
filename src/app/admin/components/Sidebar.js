@@ -8,9 +8,9 @@ export default function Sidebar() {
   const links = [
     { href: '/admin/hero', label: '首頁圖片' },
     { href: '/admin/about', label: '關於我們' },
+    { href: '/admin/contact', label: '聯絡我們' },
     { href: '/admin/members', label: '成員資料' },
     { href: '/admin/works', label: '作品資料' },
-    { href: '/admin/contact', label: '聯絡我們' },
     { href: '/admin/messages', label: '訊息' },
   ];
 

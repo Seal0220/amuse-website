@@ -169,7 +169,7 @@ export default function AdminAboutPage() {
                 key={option.key}
                 type='button'
                 onClick={() => setLang(option.key)}
-                className={`px-4 py-1 rounded-full text-sm border transition-colors ${
+                className={`px-4 py-1 rounded-full text-sm border transition-colors cursor-pointer ${
                   lang === option.key
                     ? 'bg-white text-black border-white'
                     : 'border-white/20 text-white/60 hover:text-white'

@@ -71,7 +71,7 @@ export default function AdminHeroPage() {
     <div className='bg-neutral-950 text-white min-h-lvh'>
       <div className='p-8 max-w-4xl'>
         <header className='flex items-center justify-between mb-6'>
-          <h1 className='text-2xl font-bold'>Hero 圖片管理</h1>
+          <h1 className='text-2xl font-bold'>首頁圖片管理</h1>
           <div className='text-sm opacity-80'>{msg}</div>
         </header>
 
