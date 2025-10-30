@@ -1,5 +1,8 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import useWindowWidth from '@/app/hooks/useWindowWidth';
+import { FaAngleDown } from "react-icons/fa6";
+
 
 // === 上傳頭像 API ===
 async function uploadMemberImage(file, id) {
@@ -16,12 +19,17 @@ async function uploadMemberImage(file, id) {
 }
 
 export default function AdminMembersPage() {
+  const { isBelowSize } = useWindowWidth();
   const [members, setMembers] = useState([]);
   const [selected, setSelected] = useState(null);
   const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [lang, setLang] = useState('zh');
+
+  // 行動版：上方列表是否展開
+  const [listOpen, setListOpen] = useState(true);
+  const listRef = useRef(null);
 
   // === 載入成員 ===
   async function load() {
@@ -46,7 +54,12 @@ export default function AdminMembersPage() {
   // === 選取成員 ===
   function selectMember(m) {
     setMsg('');
-    if (!m) return setSelected({ ...blankForm });
+    if (!m) {
+      setSelected({ ...blankForm });
+      // 行動版：點「新增」後自動收合列表
+      setListOpen(false);
+      return;
+    }
 
     const parse = str => {
       try { return JSON.parse(str || '{}'); } catch { return {}; }
@@ -60,6 +73,9 @@ export default function AdminMembersPage() {
       file: null,
       isNew: false,
     });
+
+    // 行動版：選取後自動收合上方列表
+    setListOpen(false);
   }
 
   // === 更新多語欄位 ===
@@ -94,7 +110,7 @@ export default function AdminMembersPage() {
         education: selected.education,
         specialty: selected.specialty,
         image: imageUrl,
-        order_index: selected.order_index ?? 0, // ← 加上這行
+        order_index: selected.order_index ?? 0,
       };
 
       const res = await fetch(
@@ -118,7 +134,6 @@ export default function AdminMembersPage() {
     }
   }
 
-
   // === 刪除 ===
   async function handleDelete() {
     if (!selected || selected.isNew) return;
@@ -133,92 +148,167 @@ export default function AdminMembersPage() {
     }
   }
 
-  // === 介面 ===
+  const year = new Date().getFullYear();
+
   return (
     <div className='bg-neutral-950 text-white'>
-      <div className='flex min-h-lvh border-t border-white/15'>
-        {/* 左側清單 */}
-        <aside className='w-90 border-r border-white/15 p-4 flex flex-col'>
-          <div className='flex items-center justify-between mb-4'>
-            <h1 className='text-xl font-bold'>成員列表</h1>
-            <div
-              onClick={() => selectMember(null)}
-              className='px-2 py-1 text-sm bg-white/10 hover:bg-white/20 rounded cursor-pointer transition-all duration-100 ease-in-out'
-            >
-              + 新增
+      <div className='min-h-dvh border-t border-white/15 md:flex md:min-h-screen'>
+
+
+        {isBelowSize('sm') ? (
+          <section className='w-full md:w-90 border-b md:border-b-0 md:border-r border-white/15'>
+            <div className='md:hidden sticky top-0 z-20 bg-neutral-950/90 backdrop-blur border-b border-white/15'>
+              <div
+                className='flex items-center justify-between px-4 py-3'
+                onClick={() => setListOpen(o => !o)}
+              >
+                <h1 className='text-lg font-semibold'>成員列表</h1>
+                <FaAngleDown className={`${listOpen ? 'rotate-180' : 'rotate-0'} transition`} />
+                <button
+                  onClick={() => selectMember(null)}
+                  className='px-3 py-1 text-sm bg-white/10 hover:bg-white/20 rounded transition'
+                >
+                  + 新增
+                </button>
+              </div>
+
+              {/* 收合內容 */}
+              <div
+                ref={listRef}
+                className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out ${listOpen ? 'opacity-100' : 'opacity-0'}`}
+                style={{ maxHeight: listOpen ? '60lvh' : 0 }}
+              >
+                <div className='p-4'>
+                  {loading ? (
+                    <div className='opacity-70 text-sm'>載入中...</div>
+                  ) : members.length === 0 ? (
+                    <div className='opacity-70 text-sm'>目前沒有資料</div>
+                  ) : (
+                    <ul className='space-y-2 overflow-y-auto max-h-[56lvh]'>
+                      {members
+                        .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
+                        .map((m) => {
+                          let nameZh = '', specZh = '';
+                          try { nameZh = JSON.parse(m.name || '{}').zh || ''; } catch { }
+                          try { specZh = JSON.parse(m.specialty || '{}').zh || ''; } catch { }
+                          return (
+                            <li key={m.id}>
+                              <button
+                                type='button'
+                                onClick={() => selectMember(m)}
+                                className={`w-full text-left px-3 py-2 rounded cursor-pointer transition ${selected && selected.id === m.id && !selected.isNew ? 'bg-white/20' : 'hover:bg-white/10'}`}
+                              >
+                                <div className='flex items-center gap-3'>
+                                  {m.image && (
+                                    <img
+                                      src={m.image}
+                                      alt=''
+                                      className='w-8 h-8 rounded-full object-cover border border-white/20'
+                                    />
+                                  )}
+                                  <div>
+                                    <div className='font-medium'>{nameZh}</div>
+                                    <div className='text-xs opacity-70'>{specZh || '—'}</div>
+                                  </div>
+                                </div>
+                              </button>
+                            </li>
+                          );
+                        })}
+                    </ul>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
+          </section>
+        ) : (
+          <aside className='hidden md:flex md:flex-col md:w-90 md:h-screen border-r border-white/15'>
+            <div className='p-4 text-xl font-semibold border-b border-neutral-800 tracking-wide'>
+              成員列表
+            </div>
+            <div className='p-4'>
+              <button
+                onClick={() => selectMember(null)}
+                className='px-2 py-1 text-sm bg-white/10 hover:bg-white/20 rounded cursor-pointer transition'
+              >
+                + 新增
+              </button>
+            </div>
+            <div className='flex-1 overflow-y-auto px-4 pb-4'>
+              {loading ? (
+                <div className='opacity-70 text-sm'>載入中...</div>
+              ) : members.length === 0 ? (
+                <div className='opacity-70 text-sm'>目前沒有資料</div>
+              ) : (
+                <ul className='space-y-2'>
+                  {members
+                    .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
+                    .map((m) => {
+                      let nameZh = '', specZh = '';
+                      try { nameZh = JSON.parse(m.name || '{}').zh || ''; } catch { }
+                      try { specZh = JSON.parse(m.specialty || '{}').zh || ''; } catch { }
+                      return (
+                        <li key={m.id}>
+                          <button
+                            type='button'
+                            onClick={() => selectMember(m)}
+                            className={`w-full text-left px-3 py-2 rounded cursor-pointer transition ${selected && selected.id === m.id && !selected.isNew ? 'bg-white/20' : 'hover:bg-white/10'}`}
+                          >
+                            <div className='flex items-center gap-3'>
+                              {m.image && (
+                                <img
+                                  src={m.image}
+                                  alt=''
+                                  className='w-8 h-8 rounded-full object-cover border border-white/20'
+                                />
+                              )}
+                              <div>
+                                <div className='font-medium'>{nameZh}</div>
+                                <div className='text-xs opacity-70'>{specZh || '—'}</div>
+                              </div>
+                            </div>
+                          </button>
+                        </li>
+                      );
+                    })}
+                </ul>
+              )}
+            </div>
+            <footer className='p-3 text-xs text-neutral-500 border-t border-neutral-800'>
+              © {year} Admin Dashboard
+            </footer>
+          </aside>
+        )}
 
-          {loading ? (
-            <div className='opacity-70 text-sm'>載入中...</div>
-          ) : members.length === 0 ? (
-            <div className='opacity-70 text-sm'>目前沒有資料</div>
-          ) : (
-            <ul className='overflow-y-auto space-y-2'>
-              {members
-                .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
-                .map((m) => {
-                  let nameZh = '', specZh = '';
-                  try { nameZh = JSON.parse(m.name || '{}').zh || ''; } catch { }
-                  try { specZh = JSON.parse(m.specialty || '{}').zh || ''; } catch { }
-                  return (
-                    <li key={m.id}>
-                      <div
-                        onClick={() => selectMember(m)}
-                        className={`w-full text-left px-3 py-2 rounded cursor-pointer transition-all duration-100 ease-in-out
-                         ${selected && selected.id === m.id && !selected.isNew
-                            ? 'bg-white/20'
-                            : 'hover:bg-white/10'
-                          }`}
-                      >
-                        <div className='flex items-center gap-3'>
-                          {m.image && (
-                            <img
-                              src={m.image}
-                              alt=''
-                              className='w-8 h-8 rounded-full object-cover border border-white/20'
-                            />
-                          )}
-                          <div>
-                            <div className='font-medium'>{nameZh}</div>
-                            <div className='text-xs opacity-70'>{specZh || '—'}</div>
-                          </div>
-                        </div>
-                      </div>
-                    </li>
-                  );
-                })}
-            </ul>
-          )}
-        </aside>
 
-        {/* 右側編輯區 */}
+        {/* 主要編輯區（行動版：在下方；桌機：在右側） */}
         <main className='flex-1 p-6 overflow-y-auto'>
           {!selected ? (
-            <div className='text-white/60'>← 請選擇左側成員或新增新成員</div>
+            <div className='text-white/60'>
+              {isBelowSize('sm') ? '↑ 請在上方「作品列表」選擇作品或點「新增」' : '← 請選擇左側作品或新增新作品'}
+            </div>
           ) : (
-            <form className='space-y-6 max-w-2xl' onSubmit={handleSave}>
-              <header className='flex items-center justify-between'>
-                <h2 className='text-xl font-semibold'>
+            <form className='space-y-6 max-w-2xl mx-auto md:mx-0' onSubmit={handleSave}>
+              <header className='flex items-center justify-between gap-4'>
+                <h2 className='text-lg md:text-xl font-semibold'>
                   {selected.isNew ? '新增成員' : `編輯：${selected.name.zh}`}
                 </h2>
-                <div className='text-sm opacity-80'>{msg}</div>
+                <div className='text-xs md:text-sm opacity-80'>{msg}</div>
               </header>
 
               {/* 語言切換 */}
               <div className='flex gap-2 mb-2'>
                 {['zh', 'en'].map(l => (
-                  <div
+                  <button
+                    type='button'
                     key={l}
                     onClick={() => setLang(l)}
-                    className={`px-4 py-1 rounded-full text-sm border cursor-pointer transition-all duration-100 ease-in-out 
-                    ${lang === l
-                        ? 'bg-white text-black border-white'
-                        : 'border-white/20 text-white/60 hover:text-white'
-                      }`}
+                    className={`px-4 py-1 rounded-full text-sm border transition 
+                      ${lang === l ? 'bg-white text-black border-white' : 'border-white/20 text-white/60 hover:text-white'}
+                    `}
                   >
                     {l === 'zh' ? '中文' : '英文'}
-                  </div>
+                  </button>
                 ))}
               </div>
 
@@ -246,7 +336,7 @@ export default function AdminMembersPage() {
                 <div className='mb-1 text-sm opacity-80'>顯示順序</div>
                 <input
                   type='number'
-                  className='w-20 px-3 py-2 rounded bg-white/5 border border-white/15'
+                  className='w-24 px-3 py-2 rounded bg-white/5 border border-white/15'
                   value={selected.order_index ?? 0}
                   onChange={(e) =>
                     setSelected((v) => ({ ...v, order_index: Number(e.target.value) }))
@@ -285,37 +375,35 @@ export default function AdminMembersPage() {
               </div>
 
               {/* 操作按鈕 */}
-              <div className='flex gap-3 pt-4'>
+              <div className='flex flex-wrap gap-3 pt-2'>
                 <button
                   type='submit'
                   disabled={saving}
-                  className={`px-4 py-2 rounded transition-all duration-100 ease-in-out ${saving
+                  className={`px-4 py-2 rounded transition ${saving
                     ? 'bg-white/5 text-white/40 cursor-not-allowed'
                     : 'bg-white/10 hover:bg-white/20 cursor-pointer'
                     }`}
                 >
-                  {saving
-                    ? '處理中...'
-                    : selected.isNew
-                      ? '送出'
-                      : '儲存修改'}
+                  {saving ? '處理中...' : selected.isNew ? '送出' : '儲存修改'}
                 </button>
 
                 {!selected.isNew && (
-                  <div
+                  <button
+                    type='button'
                     onClick={handleDelete}
-                    className='px-4 py-2 rounded bg-red-600/80 hover:bg-red-600 cursor-pointer transition-all duration-100 ease-in-out'
+                    className='px-4 py-2 rounded bg-red-600/80 hover:bg-red-600 transition'
                   >
                     刪除
-                  </div>
+                  </button>
                 )}
 
-                <div
+                <button
+                  type='button'
                   onClick={() => setSelected(null)}
-                  className='px-4 py-2 rounded bg-white/10 hover:bg-white/20 cursor-pointer transition-all duration-100 ease-in-out'
+                  className='px-4 py-2 rounded bg-white/10 hover:bg-white/20 transition'
                 >
                   取消
-                </div>
+                </button>
               </div>
             </form>
           )}
