@@ -10,6 +10,7 @@ import ContactUs from '@/app/components/ContactUs';
 import Typewriter from '@/app/components/Typewriter';
 import MemberCard from './components/MemberCard';
 import HeroImages from './components/HeroImages';
+import useWindowWidth from '@/app/hooks/useWindowWidth';
 
 
 export default function HomePage() {
@@ -20,6 +21,8 @@ export default function HomePage() {
   const memberTitles = teamLocale?.memberTitle || [];
   const memberTitlePrimary = memberTitles[0] ?? '';
   const memberTitleSecondary = memberTitles[1] ?? memberTitlePrimary;
+
+  const { windowSize, isBelowSize } = useWindowWidth();
 
   const [introContent, setIntroContent] = useState({
     headline: introLocale?.headline || '',
@@ -147,8 +150,8 @@ export default function HomePage() {
     animator,
     pathname,
     lang,
-    progressMap: { home: 0, team: 1.36, contact: 3 },
-    thresholds: { homeEnd: 1, teamEnd: 2.5 },
+    progressMap: { home: 0, team: 1.36, contact: 4 },
+    thresholds: { homeEnd: 1, teamEnd: 3 },
   });
 
   // --------- 動畫定義 ----------
@@ -169,39 +172,83 @@ export default function HomePage() {
     .before({ on: 0.15 }, (ele) => {
       ele.style.transform = 'translate(-100%, 40lvh)';
       ele.style.opacity = '0%';
-      ele.style.fontSize = '6vw'
+      ele.style.fontSize = '6vw';
     })
     .when({ on: 0.15, to: 1 }, (ele) => {
       infoTypewriter1Ref.current?.start();
 
-      ele.style.lineHeight = '8rem'
-      ele.style.fontSize = '8rem';
-      ele.style.transform = 'translate(0, 40lvh)';
+      if (isBelowSize('xs')) {
+        ele.style.lineHeight = '3rem';
+        ele.style.fontSize = '3rem';
+        ele.style.transform = 'translate(0, 35lvh)';
+      }
+      else if (isBelowSize('md')) {
+        ele.style.lineHeight = '5rem';
+        ele.style.fontSize = '5rem';
+        ele.style.transform = 'translate(0, 38lvh)';
+      }
+      else {
+        ele.style.lineHeight = '8rem';
+        ele.style.fontSize = '8rem';
+        ele.style.transform = 'translate(0, 40lvh)';
+      }
+
       ele.style.opacity = '100%';
     })
     .when({ on: 1, to: 1.35 }, (ele) => {
       infoTypewriter1Ref.current?.start();
       infoTypewriter2Ref.current?.start();
 
-      ele.style.lineHeight = '2rem'
-      ele.style.fontSize = '1.25rem';
-      ele.style.transform = 'translate(5rem, 60lvh)';
+      if (isBelowSize('xs')) {
+        ele.style.lineHeight = '1.25rem';
+        ele.style.fontSize = '1rem';
+        ele.style.transform = 'translate(2rem, 50lvh)';
+      }
+      else if (isBelowSize('md')) {
+        ele.style.lineHeight = '2rem';
+        ele.style.fontSize = '1.25rem';
+        ele.style.transform = 'translate(5rem, 55lvh)';
+      }
+      else {
+        ele.style.lineHeight = '2rem';
+        ele.style.fontSize = '1.25rem';
+        ele.style.transform = 'translate(5rem, 60lvh)';
+      }
+
       ele.style.opacity = '100%';
     })
     .when({ on: 1.35, to: 1.7 }, (ele) => {
       infoTypewriter1Ref.current?.start();
       infoTypewriter2Ref.current?.start();
 
-      ele.style.lineHeight = '2rem'
-      ele.style.fontSize = '1.25rem';
-      ele.style.transform = 'translate(5rem, 40lvh)';
+      if (isBelowSize('xs')) {
+        ele.style.lineHeight = '1.25rem';
+        ele.style.fontSize = '1rem';
+        ele.style.transform = 'translate(2rem, 37lvh)';
+      }
+      else if (isBelowSize('md')) {
+        ele.style.lineHeight = '2rem';
+        ele.style.fontSize = '1.25rem';
+        ele.style.transform = 'translate(5rem, 40lvh)';
+      }
+      else if (isBelowSize('lg')) {
+        ele.style.lineHeight = '2rem';
+        ele.style.fontSize = '1.25rem';
+        ele.style.transform = 'translate(5rem, 40lvh)';
+      }
+      else {
+        ele.style.lineHeight = '2rem';
+        ele.style.fontSize = '1.25rem';
+        ele.style.transform = 'translate(5rem, 42lvh)';
+      }
+
       ele.style.opacity = '100%';
     })
-    .when({ on: 1.7, to: 2.5 }, (ele) => {
+    .when({ on: 1.7, to: 3 }, (ele) => {
       ele.style.transform = 'translate(5rem, 30lvh)';
       ele.style.opacity = '0%'
     })
-    .after({ on: 2.5 }, (ele) => {
+    .after({ on: 3 }, (ele) => {
       ele.style.opacity = '0%';
     });
 
@@ -209,10 +256,10 @@ export default function HomePage() {
     .before({ on: 1 }, (ele) => {
       ele.style.opacity = '0%';
     })
-    .when({ on: 1, to: 2.5 }, (ele) => {
+    .when({ on: 1, to: 3 }, (ele) => {
       ele.style.opacity = '100%';
     })
-    .after({ on: 2.5 }, (ele) => {
+    .after({ on: 3 }, (ele) => {
       ele.style.opacity = '0%';
     });
 
@@ -221,11 +268,11 @@ export default function HomePage() {
       ele.style.transform = 'translateY(calc(100lvh + 5rem))';
       ele.style.opacity = '100%';
     })
-    .when({ on: 1, to: 2.5 }, (ele) => {
+    .when({ on: 1, to: 3 }, (ele) => {
       ele.style.transform = 'translateY(0)';
       ele.style.opacity = '100%';
     })
-    .after({ on: 2.5 }, (ele) => {
+    .after({ on: 3 }, (ele) => {
       ele.style.opacity = '0%';
     });
 
@@ -239,7 +286,7 @@ export default function HomePage() {
         memberAni.ele.setIsShowDetail(false);
       });
 
-      ele.style.transform = 'translateY(75lvh)';
+      ele.style.transform = isBelowSize('md') ? 'translateY(85lvh)' : 'translateY(75lvh)';
     })
     .when({ on: 1, to: 1.35 }, (ele) => {
       memberTypewriter1Ref.current?.retype(memberTitlePrimary, 120);
@@ -251,7 +298,7 @@ export default function HomePage() {
         memberAni.ele.setIsShowDetail(false);
       });
 
-      ele.style.transform = 'translateY(65lvh)';
+      ele.style.transform = isBelowSize('md') ? 'translateY(75lvh)' : 'translateY(65lvh)';
     })
     .when({ on: 1.35, to: 1.7 }, (ele) => {
       memberTypewriter1Ref.current?.retype(memberTitlePrimary, 120);
@@ -263,21 +310,24 @@ export default function HomePage() {
         memberAni.ele.setIsShowDetail(false);
       });
 
-      ele.style.transform = 'translateY(65lvh)';
+      ele.style.transform = isBelowSize('md') ? 'translateY(75lvh)' : 'translateY(65lvh)';
     })
-    .when({ on: 1.7, to: 2.5 }, (ele) => {
+    .when({ on: 1.7, to: 3 }, (ele) => {
       memberTypewriter1Ref.current?.retype(memberTitleSecondary, 120);
 
       membersAni.forEach(memberAni => {
         memberAni.ele.style.scale = 1;
         memberAni.ele.style.opacity = '100%';
-        memberAni.ele.style.margin = '0 2rem 0 2rem';
+        memberAni.ele.style.margin = isBelowSize('lg') ? '0 1rem' : '0 2rem';
         memberAni.ele.setIsShowDetail(true);
       });
 
-      ele.style.transform = 'translateY(50lvh)';
+      ele.style.transform =
+        isBelowSize('xs') ? 'translate(calc(-50vw + 4rem), 58lvh) rotate(-90deg)'
+          : isBelowSize('md') ? 'translate(calc(-50vw + 8rem), 58lvh) rotate(-90deg)'
+            : 'translateY(50lvh)';
     })
-    .after({ on: 2.5 }, (ele) => {
+    .after({ on: 3 }, (ele) => {
     });
 
   const circlesAni = [...circlesRef.map(circleRef => animator.useAnimation(circleRef))];
@@ -310,19 +360,19 @@ export default function HomePage() {
       });
       ele.style.opacity = '100%';
     })
-    .when({ on: 1.7, to: 2.5 }, (ele) => {
+    .when({ on: 1.7, to: 3 }, (ele) => {
       circlesAni.forEach(circleAni => {
         circleAni.ele.style.scale = 2;
         circleAni.ele.style.transform = 'translate(-23vw, 30lvh)';
       });
       ele.style.opacity = '70%';
     })
-    .after({ on: 2.5 }, (ele) => {
+    .after({ on: 3 }, (ele) => {
       ele.style.opacity = '0%';
     });
 
   return (
-    <main ref={animatorRef} className='relative w-full min-h-[400lvh] text-white flex flex-col bg-neutral-900'>
+    <main ref={animatorRef} className='relative w-full min-h-[450lvh] text-white flex flex-col bg-neutral-900'>
       {/* 封面 */}
       <section className='min-h-[200lvh]'>
         {/* <div
@@ -340,7 +390,7 @@ export default function HomePage() {
       <div
         ref={infoRef}
         style={{ transform: 'translate(-100%, 40lvh)' }}
-        className='fixed z-20 top-0 left-0 drop-shadow-xl drop-shadow-black/70 max-w-[80vw] transition-all ease-in-out duration-500'
+        className='fixed z-20 top-0 left-0 drop-shadow-xl drop-shadow-black/70 max-w-[calc(100vw_-_4rem)] sm:max-w-[80vw] transition-all ease-in-out duration-500'
       >
         <Typewriter
           ref={infoTypewriter1Ref}
@@ -371,17 +421,17 @@ export default function HomePage() {
       </div>
 
       {/* 我們的團隊 */}
-      <section className='min-h-[100lvh]'>
+      <section className='min-h-[200lvh]'>
         <div
           ref={aboutUsRef}
           style={{ transform: 'translateY(calc(100lvh + 5rem))' }}
           className='fixed z-10 top-0 w-full min-h-lvh flex justify-center bg-neutral-950 p-40 transition ease-in-out duration-700'
         >
-          <h1 className='absolute z-10 right-0 text-[12rem] font-bold text-right select-none'>
+          <h1 className='absolute z-10 right-0 top-34 sm:top-40 text-[4rem] sm:text-[6rem] md:text-[8rem] lg:text-[10rem] xl:text-[12rem] font-bold text-right select-none'>
             <Typewriter
               ref={memberTypewriter1Ref}
               speed={500}
-              className='flex'
+              className='flex transition-[font-size] ease-in-out duration-700'
             />
           </h1>
 
@@ -390,27 +440,25 @@ export default function HomePage() {
           <div
             ref={memberGroupRef}
             style={{ transform: 'translateY(75lvh)' }}
-            className='absolute z-6 top-0 transition ease-in-out duration-700'
+            className='absolute z-6 top-0 flex justify-center items-center gap-0 transition ease-in-out duration-700'
           >
-            <div className='flex flex-row justify-center items-center gap-32'>
-              {members.map((member, i) => {
-                const name = pickLocalized(currentLocale, member?.name, teamLocale?.untitled ?? '');
-                const education = pickLocalized(currentLocale, member?.education);
-                const specialty = pickLocalized(currentLocale, member?.specialty);
-                return (
-                  <MemberCard
-                    key={member?.id ?? i}
-                    ref={membersRef.current[i]}
-                    name={name}
-                    img={member?.image || '/members/default.jpg'}
-                    details={{
-                      education,
-                      specialty,
-                    }}
-                  />
-                );
-              })}
-            </div>
+            {members.map((member, i) => {
+              const name = pickLocalized(currentLocale, member?.name, teamLocale?.untitled ?? '');
+              const education = pickLocalized(currentLocale, member?.education);
+              const specialty = pickLocalized(currentLocale, member?.specialty);
+              return (
+                <MemberCard
+                  key={member?.id ?? i}
+                  ref={membersRef.current[i]}
+                  name={name}
+                  img={member?.image || '/members/default.jpg'}
+                  details={{
+                    education,
+                    specialty,
+                  }}
+                />
+              );
+            })}
           </div>
 
           {/* Circles */}
@@ -418,11 +466,11 @@ export default function HomePage() {
             ref={circleGroupRef}
             className='absolute z-5 flex items-center justify-center transition ease-in-out duration-700 pointer-events-none'
           >
-            <div ref={circle1Ref} className='absolute border border-white/50 size-40 rounded-full shadow-[0_0_64px_8px] shadow-white/20 transition ease-in-out duration-200' />
-            <div ref={circle2Ref} className='absolute border border-white/50 size-80 rounded-full shadow-[0_0_64px_8px] shadow-white/20 transition ease-in-out duration-300' />
-            <div ref={circle3Ref} className='absolute border border-white/50 size-160 rounded-full shadow-[0_0_64px_8px] shadow-white/20 transition ease-in-out duration-[500ms]' />
-            <div ref={circle4Ref} className='absolute border border-white/50 size-320 rounded-full shadow-[0_0_64px_8px] shadow-white/20 transition ease-in-out duration-[800ms]' />
-            <div ref={circle5Ref} className='absolute border border-white/50 size-640 rounded-full shadow-[0_0_64px_8px] shadow-white/20 transition ease-in-out duration-[1600ms]' />
+            <div ref={circle1Ref} className='absolute border border-white/35 size-40 rounded-full shadow-[0_0_64px_8px] shadow-white/20 transition-all ease-in-out duration-200' />
+            <div ref={circle2Ref} className='absolute border border-white/35 size-80 rounded-full shadow-[0_0_64px_8px] shadow-white/20 transition-all ease-in-out duration-300' />
+            <div ref={circle3Ref} className='absolute border border-white/35 size-160 rounded-full shadow-[0_0_64px_8px] shadow-white/20 transition-all ease-in-out duration-[500ms]' />
+            <div ref={circle4Ref} className='absolute border border-white/35 size-320 rounded-full shadow-[0_0_64px_8px] shadow-white/20 transition-all ease-in-out duration-[800ms]' />
+            <div ref={circle5Ref} className='absolute border border-white/35 size-640 rounded-full shadow-[0_0_64px_8px] shadow-white/20 transition-all ease-in-out duration-[1600ms]' />
           </div>
         </div>
       </section>

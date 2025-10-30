@@ -86,22 +86,22 @@ export default function ContactUs() {
   const messageClass = msgKey === 'error' ? 'text-red-400' : 'text-green-400';
 
   return (
-    <section className='bg-neutral-900 text-white py-40 px-6'>
+    <section className='bg-neutral-900 text-white py-20 md:py-40 px-6'>
       <div className='max-w-6xl mx-auto'>
         {/* 標題 */}
         <div className='text-center mb-20'>
           <h2 className='text-3xl md:text-4xl font-semibold tracking-wide'>{locale.title}</h2>
         </div>
 
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-10'>
+        <div className='max-w-lg md:max-w-none mx-auto grid grid-cols-1 md:grid-cols-2 gap-20 sm:gap-10'>
           {/* 表單 */}
-          <form className='space-y-4' onSubmit={handleSubmit}>
-            <input name='company' type='text' placeholder={locale.form.company} className='w-full p-3 rounded-full bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition' />
-            <input name='person' type='text' placeholder={locale.form.person} className='w-full p-3 rounded-full bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition' required />
-            <input name='phone' type='text' placeholder={locale.form.phone} className='w-full p-3 rounded-full bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition' />
-            <input name='email' type='email' placeholder={locale.form.email} className='w-full p-3 rounded-full bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition' required />
-            <input name='address' type='text' placeholder={locale.form.address} className='w-full p-3 rounded-full bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition' />
-            <textarea name='message' rows='5' placeholder={locale.form.message} className='w-full p-3 rounded-3xl bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition' required />
+          <form className='order-2 md:order-1 space-y-4' onSubmit={handleSubmit}>
+            <input name='company' type='text' placeholder={locale.form.company} className='w-full p-3 text-sm sm:text-base rounded-full bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition' />
+            <input name='person' type='text' placeholder={locale.form.person} className='w-full p-3 text-sm sm:text-base rounded-full bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition' required />
+            <input name='phone' type='text' placeholder={locale.form.phone} className='w-full p-3 text-sm sm:text-base rounded-full bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition' />
+            <input name='email' type='email' placeholder={locale.form.email} className='w-full p-3 text-sm sm:text-base rounded-full bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition' required />
+            <input name='address' type='text' placeholder={locale.form.address} className='w-full p-3 text-sm sm:text-base rounded-full bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition' />
+            <textarea name='message' rows='5' placeholder={locale.form.message} className='w-full p-3 text-sm sm:text-base rounded-3xl bg-neutral-800 border border-neutral-600 outline-none focus:border-neutral-400 transition' required />
             <button
               type='submit'
               disabled={sending}
@@ -113,39 +113,37 @@ export default function ContactUs() {
           </form>
 
           {/* 右側聯絡資訊 */}
-          <div className='flex flex-col gap-4 text-neutral-300'>
-            <table className='w-full text-left border-separate border-spacing-y-2'>
-              <tbody>
+          <div className='order-1 md:order-2 flex flex-col gap-8 sm:gap-4 text-neutral-300'>
+            <div className='flex flex-col gap-2 w-full text-left border-separate border-spacing-y-2'>
                 {address && (
-                  <tr>
-                    <td className='text-sm text-neutral-400 w-19'>{`${locale.table.address}${colon}`}</td>
-                    <td className='font-bold'>{address}</td>
-                  </tr>
+                  <div className='flex flex-col sm:flex-row gap-1 sm:gap-0 hover:bg-neutral-800/70 active:bg-neutral-800/70 rounded p-2 transition-all duration-150 ease-in-out'>
+                    <div className='text-xs sm:text-sm text-neutral-400 sm:min-w-19'>{`${locale.table.address}${colon}`}</div>
+                    <div className='text-sm sm:text-base font-bold'>{address}</div>
+                  </div>
                 )}
                 {phone && (
-                  <tr>
-                    <td className='text-sm text-neutral-400 w-19'>{`${locale.table.phone}${colon}`}</td>
-                    <td className='font-bold'>{phone}</td>
-                  </tr>
+                  <div className='flex flex-col sm:flex-row gap-1 sm:gap-0 hover:bg-neutral-800/70 active:bg-neutral-800/70 rounded p-2 transition-all duration-150 ease-in-out'>
+                    <div className='text-xs sm:text-sm text-neutral-400 sm:min-w-19'>{`${locale.table.phone}${colon}`}</div>
+                    <div className='text-sm sm:text-base font-bold'>{phone}</div>
+                  </div>
                 )}
                 {email && (
-                  <tr>
-                    <td className='text-sm text-neutral-400 w-19'>{`${locale.table.email}${colon}`}</td>
-                    <td className='font-bold'>{email}</td>
-                  </tr>
+                  <div className='flex flex-col sm:flex-row gap-1 sm:gap-0 hover:bg-neutral-800/70 active:bg-neutral-800/70 rounded p-2 transition-all duration-150 ease-in-out'>
+                    <div className='text-xs sm:text-sm text-neutral-400 sm:min-w-19'>{`${locale.table.email}${colon}`}</div>
+                    <div className='text-sm sm:text-base font-bold'>{email}</div>
+                  </div>
                 )}
                 {hours && (
-                  <tr>
-                    <td className='text-sm text-neutral-400 w-19 whitespace-pre-line'>{`${locale.table.hours}${colon}`}</td>
-                    <td className='font-bold whitespace-pre-line'>{`${locale.table.hoursDefault}`}</td>
-                  </tr>
+                  <div className='flex flex-col sm:flex-row gap-1 sm:gap-0 hover:bg-neutral-800/70 active:bg-neutral-800/70 rounded p-2 transition-all duration-150 ease-in-out'>
+                    <div className='text-xs sm:text-sm text-neutral-400 sm:min-w-19 sm:whitespace-pre-line'>{`${locale.table.hours}${colon}`}</div>
+                    <div className='text-sm sm:text-base font-bold whitespace-pre-line'>{`${locale.table.hoursDefault}`}</div>
+                  </div>
                 )}
-              </tbody>
-            </table>
+            </div>
 
-
+            
             {/* 社群連結 */}
-            <div className='flex items-center space-x-4 select-none'>
+            <div className='w-full flex items-center ml-2 space-x-4 select-none'>
               <Link href={instagram} target='_blank' rel='noopener noreferrer' className='hover:text-white underline underline-offset-4 flex flex-row gap-2 items-center hover:-translate-y-0.5 transition-all duration-300 ease-in-out'>
                 <img src='/ig-logo.png' alt='Instagram' className='size-8' />
                 <span className='text-sm'>{locale.links.instagram}</span>

@@ -2,7 +2,10 @@
   "pages": {
     "home": {
       "team": {
-        "memberTitle": ["我們的團隊", "團隊成員"],
+        "memberTitle": [
+          "我們的團隊",
+          "團隊成員"
+        ],
         "description": "我們在多元的專業背景中彼此協作，將藝術與設計的能量轉化為場域中的嶄新體驗。",
         "untitled": "(未命名)",
         "missing": "—",
@@ -70,7 +73,7 @@
     },
     "Footer": {
       "copyright": "Copyright © 2024 Amuse Art and Design 版權所有。",
-      "credits": "網站由 Chen Yiquan 與 Liao Xuan-Tang 建置。"
+      "credits": "Website developed by Chen Yiquan & Liao Xuan-Tang."
     },
     "Work": {
       "listLabel": "列表",
@@ -93,6 +96,9 @@
         "height": "高",
         "separator": " × "
       }
+    },
+    "ImageSlider": {
+      "no_image": "無圖片"
     }
   }
 }

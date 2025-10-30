@@ -9,7 +9,10 @@
         ]
       },
       "team": {
-        "memberTitle": ["Our Team", "Team Members"],
+        "memberTitle": [
+          "Our Team",
+          "Team Members"
+        ],
         "description": "Across disciplines we collaborate to transform creative energy into new experiences for every venue.",
         "untitled": "(Untitled)",
         "missing": "—",
@@ -100,6 +103,9 @@
         "height": "Height",
         "separator": " × "
       }
+    },
+    "ImageSlider": {
+      "no_image": "No Image"
     }
   }
 }

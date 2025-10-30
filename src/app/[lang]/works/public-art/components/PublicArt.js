@@ -6,19 +6,20 @@ import useAxisWobbleRef from '@/app/hooks/useAxisWobble';
 import WorkDots from './WorkDots';
 import Typewriter from '@/app/components/Typewriter';
 import useLocale from '@/app/hooks/useLocale';
+import useWindowWidth from '@/app/hooks/useWindowWidth';
 
 /**
  * 動態：一年一軌道、一作一點（public-art）
  * 年份排序：由舊到新（越新越後面），最後附上 __CENTER__
  * 其餘動畫／幾何維持原樣
  */
-export default function PublicArt({ lang = 'zh' }) {
+export default function PublicArt() {
+  const { isBelowSize } = useWindowWidth();
   const { currentLocale, localeDict } = useLocale();
   const worksLocale = localeDict.pages.works || {};
   const publicArtLocale = worksLocale.types?.publicArt || {};
   const titleMain = publicArtLocale.title || 'Public Art';
   const titleSub = publicArtLocale.subtitle || '';
-  const activeLang = lang || currentLocale || 'zh';
   const [years, setYears] = useState(['__CENTER__']);           // 例如 ['2018', '2020', ..., '__CENTER__']
   const [worksByYear, setWorksByYear] = useState([]);           // 例如 [['a','b'], ['c'], ...] 對應 years（不含 CENTER）
 
@@ -85,13 +86,15 @@ export default function PublicArt({ lang = 'zh' }) {
   const textRefs = useRef([]);
   textRefs.current = years.map((_, i) => textRefs.current[i] ?? null);
 
-  const basicAxisDeg = -150;
+  const dotGapPx = isBelowSize('sm') ? 48 : 96;
+  const basicAxisDeg = isBelowSize('sm') ? -120 : -150;
+  const wobbleRangeDeg = isBelowSize('sm') ? 5 : 10;
   const axisRef = useRef(null);
-  useAxisWobbleRef(axisRef, basicAxisDeg, 10, 0.25, textRefs.current);
+  useAxisWobbleRef(axisRef, basicAxisDeg, wobbleRangeDeg, 0.25, textRefs.current);
 
   const workDotsRef = useRef(null);
 
-  useBreathingNoise(centerTickRef, { baseBlur: 64, baseSpread: 16 });
+  // useBreathingNoise(centerTickRef, { baseBlur: 64, baseSpread: 16 });
   useBreathingNoise(lineRef, { baseBlur: 32, baseSpread: 2, speed: 0.5, isScale: false });
 
   // 幾何
@@ -112,19 +115,27 @@ export default function PublicArt({ lang = 'zh' }) {
       .useAnimation(ringGroupRef)
       .before({ on: 0 }, () => { })
       .when({ on: 0, to: pageProgress }, (ele, vars, { progress }) => {
-        const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+        const easeInOutCubic = (t) =>
+          t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-        const norm = Math.min(Math.max(progress / pageProgress, 0), 1);
+        // === 手機模式時：加速 ×2，緩動時間 ×0.75 ===
+        const speedFactor = isBelowSize('sm') ? 2 : 1;
+        const easingFactor = isBelowSize('sm') ? 0.55 : 1; // 縮短緩動時長為原本的 75%
+
+        // progress → norm：把動畫進度時間壓縮為 easingFactor 倍（越快完成）
+        const normRaw = progress / pageProgress;
+        const norm = Math.min(Math.max(normRaw / easingFactor, 0), 1);
         const smoothMove = easeInOutCubic(norm);
 
         const vw = window.innerWidth;
         const vh = window.innerHeight;
-        const endX = vw * 0.625;
-        const endY = vh * 0.625;
-        const moveX = endX * smoothMove;
-        const moveY = endY * smoothMove;
+
+        // 位移距離加倍（速度提升）
+        const moveX = vw * 0.625 * smoothMove * speedFactor;
+        const moveY = vh * 0.625 * smoothMove * speedFactor;
         ele.style.transform = `translate(${moveX}px, ${moveY}px)`;
 
+        // === 以下維持原樣 ===
         const delayPerRing = 0.08 * pageProgress;
         const band = 0.18 * pageProgress;
         const waveStartOffset = 0.0;
@@ -160,7 +171,7 @@ export default function PublicArt({ lang = 'zh' }) {
           node.style.transform = `scale(${scale})`;
           node.style.opacity = String(alpha);
 
-          if (isYear(years[i])) {
+          if (years[i] !== '__CENTER__' && years[i] !== '__GAP__') {
             const tick = tickRefs.current[i]?.current;
             if (tick) {
               const currentRadius = (diamAt(i) / 2) * scale;
@@ -183,8 +194,9 @@ export default function PublicArt({ lang = 'zh' }) {
       .after({ on: pageProgress + 0.5 }, () => { });
 
     animator.start();
-    return () => { animator.stop(); };
-  }, [years.length, pageProgress]);
+    return () => animator.stop();
+  }, [years.length, pageProgress, isBelowSize]);
+
 
   // ==== Title: Typewriter（只在掛載時 reset + start）====
   const titleMainRef = useRef(null);
@@ -216,7 +228,7 @@ export default function PublicArt({ lang = 'zh' }) {
         {/* 環 */}
         <div
           ref={ringGroupRef}
-          className='absolute scale-50 sm:scale-100 right-[20vw] bottom-[30lvh] flex items-center justify-center transition-all duration-500 ease-out'
+          className='absolute scale-70 sm:scale-100 right-[20vw] bottom-[30lvh] flex items-center justify-center transition-all duration-500 ease-out'
         >
           <div className='h-px' />
           {years.map((y, i) => {
@@ -235,16 +247,16 @@ export default function PublicArt({ lang = 'zh' }) {
           {/* 作品白點（依每年實際作品數量） */}
           <WorkDots
             ref={workDotsRef}
-            lang={activeLang}
+            lang={currentLocale}
             years={years}
             ringRefs={ringRefs}
             isYear={(y) => !(y === '__CENTER__' || y === '__GAP__')}
             diamAt={diamAt}
-            basicAxisDeg={-150}
+            basicAxisDeg={basicAxisDeg}
             ringGroupRef={ringGroupRef}
-            edgeMarginDeg={10}
-            gapPx={96}
-            centerVoidHalfDeg={5}
+            edgeMarginDeg={wobbleRangeDeg}
+            gapPx={dotGapPx}
+            centerVoidHalfDeg={wobbleRangeDeg / 2}
             keepCenter={false}
             worksByYear={worksByYear}
           />
@@ -262,7 +274,7 @@ export default function PublicArt({ lang = 'zh' }) {
             <div
               ref={lineRef}
               className='absolute z-0 h-px bg-white/70 shadow-[0_0_32px_8px] shadow-white/50 '
-              style={{ left: 0, top: 0, width: '200vw' }}
+              style={{ left: 0, top: 0, width: '500vmax' }}
             />
 
             {/* 節點（年份刻度與中心） */}

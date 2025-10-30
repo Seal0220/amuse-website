@@ -1,5 +1,6 @@
 'use client';
 import React, { useMemo } from 'react';
+import useWindowWidth from '@/app/hooks/useWindowWidth';
 
 // 可重現亂數（依 seed）
 function mulberry32(seed) {
@@ -21,11 +22,17 @@ const strSeed = (s) => {
 };
 
 export default function Planet({ work, index = 0, onClick }) {
+  const { isBelowSize } = useWindowWidth();
+  const base =
+    isBelowSize('sm') ? 120
+      : isBelowSize('md') ? 180
+        : isBelowSize('lg') ? 260
+          : isBelowSize('xl') ? 320
+            : 380;
+
   const planet = useMemo(() => {
     // 取第一張圖
-    let imgs = [];
-    try { imgs = JSON.parse(work.images || '[]'); } catch {}
-    const img = imgs[0] || '/banner-test.png';
+    const img = work.images[0];
 
     // 穩定亂數
     const seed = strSeed(work.slug || `${index}`);
@@ -34,7 +41,10 @@ export default function Planet({ work, index = 0, onClick }) {
     // 參數
     const x = index === 0 ? '25%' : '75%';
     const y = '50%';
-    const size = 360 + Math.floor(rnd() * 40) - 20;   // 340~380px
+
+    // 最終尺寸（保留你的隨機微調）
+    const size = base + Math.floor(rnd() * 40) - 20;   // 手機較小、桌機較大，附隨機微調
+
     const tilt = index === 0 ? (rnd() * 20 - 30) : (40 + rnd() * 10); // 左：-20~20deg；右：70~80deg
     const rings = index === 0 ? 3 : 3 + Math.floor(rnd() * 2);        // 左 3，右 3~4
     const ellipseScale = index === 0 ? (1.6 + rnd() * 0.4) : 1.05;    // 左扁、右直
@@ -61,7 +71,7 @@ export default function Planet({ work, index = 0, onClick }) {
       satRadii, satSize, kfPrefix, displayTitle,
       year: work.year,
     };
-  }, [work, index]);
+  }, [work, index, base]);
 
   const handleClick = () => {
     onClick?.(work.slug);
@@ -69,15 +79,13 @@ export default function Planet({ work, index = 0, onClick }) {
 
   return (
     <div
-      className='relative select-none'
-      style={{
-        width: planet.size, height: planet.size,
-      }}
+      className='relative select-none transition-all ease-in-out duration-500'
+      style={{ width: planet.size, height: planet.size }}
     >
       {/* 本體 */}
       <button
         onClick={handleClick}
-        className='block size-full rounded-full overflow-hidden border border-white/20 shadow-[0_0_64px_8px_rgba(255,255,255,0.15)] cursor-pointer hover:scale-[1.1] transition-all duration-300 ease-in-out'
+        className='block size-full rounded-full overflow-hidden bg-neutral-500 border border-white/20 shadow-[0_0_64px_8px_rgba(255,255,255,0.15)] cursor-pointer hover:scale-[1.1] active:scale-[1.1] transition-all duration-300 ease-in-out'
         title={planet.displayTitle}
         style={{
           backgroundImage: `url(${planet.img})`,
@@ -143,14 +151,14 @@ export default function Planet({ work, index = 0, onClick }) {
           {/* 針對本顆星球專屬的 keyframes，避免命名衝突 */}
           <style jsx>{`
             ${planet.satRadii.map((_, si) => {
-              const name = `${planet.kfPrefix}_${si}`;
-              return `
+            const name = `${planet.kfPrefix}_${si}`;
+            return `
                 @keyframes ${name} {
                   0% { transform: translate(-50%,-50%) rotate(0deg); }
                   100% { transform: translate(-50%,-50%) rotate(360deg); }
                 }
               `;
-            }).join('\n')}
+          }).join('\n')}
           `}</style>
         </div>
       )}

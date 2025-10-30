@@ -200,15 +200,84 @@ export default function BottomArc({ lang, prevWork, nextWork, type }) {
           if (nextWork) drawLabel('right', pos.right, pickTitle(nextWork), hoverAmtR);
         };
 
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchMoved = false;
+        let pressedTarget = null; // 新增：紀錄按下的目標（left/right）
+
+        sk.touchStarted = () => {
+          touchStartX = sk.mouseX;
+          touchStartY = sk.mouseY;
+          touchMoved = false;
+          pressedTarget = null;
+
+          // 檢查是否按到球
+          const dL = sk.dist(sk.mouseX, sk.mouseY, pos.left.x, pos.left.y);
+          const dR = sk.dist(sk.mouseX, sk.mouseY, pos.right.x, pos.right.y);
+          const onTextL = inRect(sk.mouseX, sk.mouseY, labelBounds.left);
+          const onTextR = inRect(sk.mouseX, sk.mouseY, labelBounds.right);
+
+          if (prevWork && (dL < 22 || onTextL)) pressedTarget = 'left';
+          else if (nextWork && (dR < 22 || onTextR)) pressedTarget = 'right';
+        };
+
+        sk.touchMoved = () => {
+          const dx = sk.mouseX - touchStartX;
+          const dy = sk.mouseY - touchStartY;
+          if (Math.sqrt(dx * dx + dy * dy) > 10) {
+            touchMoved = true; // 判定為滑動
+          }
+        };
+
+        sk.touchEnded = () => {
+          // 若滑動距離太大 → 視為滾動，不觸發導頁
+          if (touchMoved) return;
+
+          // 放開手指後才判斷點擊是否仍在同一個球
+          const dL = sk.dist(sk.mouseX, sk.mouseY, pos.left.x, pos.left.y);
+          const dR = sk.dist(sk.mouseX, sk.mouseY, pos.right.x, pos.right.y);
+          const onTextL = inRect(sk.mouseX, sk.mouseY, labelBounds.left);
+          const onTextR = inRect(sk.mouseX, sk.mouseY, labelBounds.right);
+
+          if (pressedTarget === 'left' && prevWork && (dL < 22 || onTextL)) {
+            go(prevWork.slug);
+          } else if (pressedTarget === 'right' && nextWork && (dR < 22 || onTextR)) {
+            go(nextWork.slug);
+          }
+
+          pressedTarget = null;
+        };
+
+        // 桌面也採相同邏輯：按下不跳，放開才跳
+        let mousePressedTarget = null;
+
         sk.mousePressed = () => {
           const dL = sk.dist(sk.mouseX, sk.mouseY, pos.left.x, pos.left.y);
           const dR = sk.dist(sk.mouseX, sk.mouseY, pos.right.x, pos.right.y);
           const onTextL = inRect(sk.mouseX, sk.mouseY, labelBounds.left);
           const onTextR = inRect(sk.mouseX, sk.mouseY, labelBounds.right);
 
-          if (prevWork && (dL < 22 || onTextL)) go(prevWork.slug);
-          else if (nextWork && (dR < 22 || onTextR)) go(nextWork.slug);
+          if (prevWork && (dL < 22 || onTextL)) mousePressedTarget = 'left';
+          else if (nextWork && (dR < 22 || onTextR)) mousePressedTarget = 'right';
         };
+
+        sk.mouseReleased = () => {
+          if (!mousePressedTarget) return;
+
+          const dL = sk.dist(sk.mouseX, sk.mouseY, pos.left.x, pos.left.y);
+          const dR = sk.dist(sk.mouseX, sk.mouseY, pos.right.x, pos.right.y);
+          const onTextL = inRect(sk.mouseX, sk.mouseY, labelBounds.left);
+          const onTextR = inRect(sk.mouseX, sk.mouseY, labelBounds.right);
+
+          if (mousePressedTarget === 'left' && prevWork && (dL < 22 || onTextL)) {
+            go(prevWork.slug);
+          } else if (mousePressedTarget === 'right' && nextWork && (dR < 22 || onTextR)) {
+            go(nextWork.slug);
+          }
+
+          mousePressedTarget = null;
+        };
+
       });
 
       cleanup = () => {
@@ -222,7 +291,7 @@ export default function BottomArc({ lang, prevWork, nextWork, type }) {
   return (
     <div
       ref={canvasHostRef}
-      className='absolute bottom-0 left-0 w-full h-full pointer-events-auto overflow-hidden'
+      className='absolute bottom-0 left-0 w-full h-full pointer-events-none overflow-hidden'
     />
   );
 }

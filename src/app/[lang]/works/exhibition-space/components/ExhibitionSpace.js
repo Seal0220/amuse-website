@@ -7,13 +7,11 @@ import useLocale from '@/app/hooks/useLocale';
 
 export default function ExhibitionSpace() {
   const router = useRouter();
-  const { lang: langParam } = useParams();
   const { currentLocale, localeDict } = useLocale();
   const worksLocale = localeDict.pages.works || {};
   const exhibitionLocale = worksLocale.types?.exhibitionSpace || {};
   const titleMain = exhibitionLocale.title || 'Exhibition Space';
   const titleSub = exhibitionLocale.subtitle || '';
-  const activeLang = langParam || currentLocale || 'zh';
   const [works, setWorks] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -57,16 +55,30 @@ export default function ExhibitionSpace() {
         </div>
       </div>
 
-      <div className={`bg-neutral-950 min-h-lvh flex flex-row items-center justify-center transition-opacity duration-250 ease-in-out ${loading ? 'opacity-0' : 'opacity-100'}`}>
-        <div className='flex flex-row justify-center gap-80'>
-          {/* Planet */}
-          {works.map((w, i) => (
-            <Planet
-              key={w.id || w.slug || i}
-              work={w}
-              index={i}
-              onClick={(slug) => router.push(`/${activeLang}/works/exhibition-space/${slug}`)}
-            />
+      {/* 內容容器：手機直向、桌機維持橫向 */}
+      <div
+        className={`bg-neutral-950 min-h-lvh flex items-center justify-center transition-opacity duration-250 ease-in-out
+           ${loading ? 'opacity-0' : 'opacity-100'}`}
+      >
+        <div
+          className={`
+            flex flex-col sm:flex-row items-center justify-center
+            gap-20 sm:gap-30 md:gap-40 lg:gap-55 xl:gap-80
+            sm:scale-100 scale-[1.08]
+            px-4 sm:px-0 py-10 sm:py-0
+          `}
+        >
+          {works.map((work, i) => (
+            <div
+              key={work.id || work.slug || i}
+              className={`flex items-center justify-center w-full sm:w-auto`}
+            >
+              <Planet
+                work={work}
+                index={i}
+                onClick={(slug) => router.push(`/${currentLocale}/works/exhibition-space/${slug}`)}
+              />
+            </div>
           ))}
         </div>
       </div>
