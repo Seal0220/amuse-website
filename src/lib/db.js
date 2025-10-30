@@ -64,6 +64,15 @@ CREATE TABLE IF NOT EXISTS hero_images (
 );
 `);
 
+// ABOUT_INFO 表格
+db.exec(`
+CREATE TABLE IF NOT EXISTS about_info (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  headline TEXT DEFAULT '{"zh":"","en":""}',
+  paragraphs TEXT DEFAULT '{"zh":[],"en":[]}'
+);
+`);
+
 // MESSAGES 表格
 db.exec(`
 CREATE TABLE IF NOT EXISTS messages (
@@ -261,6 +270,76 @@ export function getHeroImages() {
 
 export function updateHeroImages(images) {
   return db.prepare('UPDATE hero_images SET images = ?').run(JSON.stringify(images || []));
+}
+
+// ==== ABOUT_INFO CRUD =====
+const hasAboutInfo = db.prepare('SELECT COUNT(*) as n FROM about_info').get().n;
+if (hasAboutInfo === 0) {
+  db
+    .prepare('INSERT INTO about_info (id, headline, paragraphs) VALUES (1, ?, ?)')
+    .run(
+      JSON.stringify({ zh: '', en: '' }),
+      JSON.stringify({ zh: [], en: [] }),
+    );
+}
+
+export function getAboutInfo() {
+  const row = db.prepare('SELECT headline, paragraphs FROM about_info WHERE id = 1').get();
+  if (!row) {
+    return {
+      headline: { zh: '', en: '' },
+      paragraphs: { zh: [], en: [] },
+    };
+  }
+
+  const safeParse = (value, fallback) => {
+    try {
+      const parsed = JSON.parse(value ?? '');
+      return parsed && typeof parsed === 'object' ? parsed : fallback;
+    } catch {
+      return fallback;
+    }
+  };
+
+  return {
+    headline: safeParse(row.headline, { zh: '', en: '' }),
+    paragraphs: safeParse(row.paragraphs, { zh: [], en: [] }),
+  };
+}
+
+export function updateAboutInfo(data) {
+  const normalizeHeadline = (val = {}) => ({
+    zh: typeof val.zh === 'string' ? val.zh : '',
+    en: typeof val.en === 'string' ? val.en : '',
+  });
+
+  const normalizeParagraphs = (val = {}) => ({
+    zh: Array.isArray(val.zh)
+      ? val.zh.filter(p => typeof p === 'string' && p.trim() !== '')
+      : [],
+    en: Array.isArray(val.en)
+      ? val.en.filter(p => typeof p === 'string' && p.trim() !== '')
+      : [],
+  });
+
+  const headline = normalizeHeadline(data?.headline);
+  const paragraphs = normalizeParagraphs(data?.paragraphs);
+
+  const payload = {
+    headline: JSON.stringify(headline),
+    paragraphs: JSON.stringify(paragraphs),
+  };
+
+  const existing = db.prepare('SELECT id FROM about_info WHERE id = 1').get();
+  if (existing) {
+    return db
+      .prepare('UPDATE about_info SET headline = @headline, paragraphs = @paragraphs WHERE id = 1')
+      .run(payload);
+  }
+
+  return db
+    .prepare('INSERT INTO about_info (id, headline, paragraphs) VALUES (1, @headline, @paragraphs)')
+    .run(payload);
 }
 
 // ==== MESSAGES CRUD =====
