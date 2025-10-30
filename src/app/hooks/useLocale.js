@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useMemo, useCallback } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 import zh from '@/app/locales/zh.json';
 import en from '@/app/locales/en.json';
@@ -11,10 +11,15 @@ const locales = { zh, en };
 // 這些第一層路徑「沒有語系前綴」，而且要固定用 zh
 const FORCE_ZH_NO_PREFIX = new Set(['admin']); // 需要再加就放這：e.g. 'cms','dashboard'
 
+// —— 小工具：在 Client 端安全取得目前的 querystring（不含 ?）—— //
+const getClientQS = () => {
+  if (typeof window === 'undefined') return '';
+  try { return window.location.search.replace(/^\?/, ''); } catch { return ''; }
+};
+
 export default function useLocale(defaultLang = 'zh') {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   // 由 pathname 推導語系；後台(/admin)一律 zh；避免用 state 造成首幀閃爍
   const currentLocale = useMemo(() => {
@@ -43,7 +48,7 @@ export default function useLocale(defaultLang = 'zh') {
     [currentLocale, defaultLang]
   );
 
-  // 切換語言：後台不改 URL，只記偏好；前台修改路徑前綴
+  // 切換語言：後台不改 URL，只記偏好；前台修改路徑前綴，並保留原 querystring
   const changeLanguage = useCallback(
     (newLang) => {
       if (!supportedLanguages.includes(newLang)) return;
@@ -64,7 +69,7 @@ export default function useLocale(defaultLang = 'zh') {
       else segs.unshift(newLang);
 
       const newPath = '/' + segs.join('/');
-      const qs = searchParams ? searchParams.toString() : '';
+      const qs = getClientQS();
       const url = qs ? `${newPath}?${qs}` : newPath;
 
       try {
@@ -72,7 +77,7 @@ export default function useLocale(defaultLang = 'zh') {
       } catch {}
       router.replace(url);
     },
-    [pathname, router, searchParams]
+    [pathname, router]
   );
 
   return { currentLocale, changeLanguage, localeDict };
@@ -82,7 +87,6 @@ export default function useLocale(defaultLang = 'zh') {
 export function useLocaleRedirect(defaultLang = 'zh') {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (!pathname) return;
@@ -102,9 +106,9 @@ export function useLocaleRedirect(defaultLang = 'zh') {
     } catch {}
 
     if (!supported.includes(seg0)) {
-      const qs = searchParams ? searchParams.toString() : '';
+      const qs = getClientQS();
       const url = qs ? `/${defaultLang}${pathname}?${qs}` : `/${defaultLang}${pathname}`;
       router.replace(url);
     }
-  }, [pathname, router, searchParams, defaultLang]);
+  }, [pathname, router, defaultLang]);
 }
