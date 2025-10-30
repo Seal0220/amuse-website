@@ -1,13 +1,6 @@
 {
   "pages": {
     "home": {
-      "intro": {
-        "headline": "Amuse Art & Design is a team of artists, designers, and museum professionals.",
-        "paragraphs": [
-          "By combining diverse expertise, our projects span art installations, public art, museum planning, and spatial design. We closely examine how space and environment inform one another, extending each site's narrative while integrating varied media into immersive experiences.",
-          "We strive to evoke profound emotions and imagination through spatial design, kinetic structures, mechanical systems, and technology."
-        ]
-      },
       "team": {
         "memberTitle": ["Our Team", "Team Members"],
         "description": "Across disciplines we collaborate to transform creative energy into new experiences for every venue.",
@@ -80,7 +73,7 @@
       "credits": "Website developed by Chen Yiquan & Liao Xuan-Tang."
     },
     "Work": {
-      "listLabel": "Project List",
+      "listLabel": "List",
       "types": {
         "public-art": "Public Art",
         "exhibition-space": "Exhibition Space"
@@ -91,8 +84,8 @@
       "labels": {
         "location": "Location:",
         "medium": "Medium:",
-        "management": "Client / Organizer:",
-        "size": "Dimensions (cm):"
+        "management": "Organizer:",
+        "size": "Size (cm):"
       },
       "dimensions": {
         "length": "Length",

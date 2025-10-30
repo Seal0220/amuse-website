@@ -138,7 +138,7 @@ export default function AdminMembersPage() {
     <div className='bg-neutral-950 text-white'>
       <div className='flex min-h-lvh border-t border-white/15'>
         {/* 左側清單 */}
-        <aside className='w-1/4 border-r border-white/15 p-4 flex flex-col'>
+        <aside className='w-90 border-r border-white/15 p-4 flex flex-col'>
           <div className='flex items-center justify-between mb-4'>
             <h1 className='text-xl font-bold'>成員列表</h1>
             <div

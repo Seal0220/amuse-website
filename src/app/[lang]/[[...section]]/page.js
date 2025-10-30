@@ -21,6 +21,60 @@ export default function HomePage() {
   const memberTitlePrimary = memberTitles[0] ?? '';
   const memberTitleSecondary = memberTitles[1] ?? memberTitlePrimary;
 
+  const [introContent, setIntroContent] = useState({
+    headline: introLocale?.headline || '',
+    paragraphs: Array.isArray(introLocale?.paragraphs) ? introLocale.paragraphs : [],
+  });
+
+  useEffect(() => {
+    setIntroContent({
+      headline: introLocale?.headline || '',
+      paragraphs: Array.isArray(introLocale?.paragraphs) ? introLocale.paragraphs : [],
+    });
+  }, [introLocale]);
+
+  useEffect(() => {
+    let canceled = false;
+
+    async function loadAboutContent() {
+      const fallbackHeadline = introLocale?.headline || '';
+      const fallbackParagraphs = Array.isArray(introLocale?.paragraphs) ? introLocale.paragraphs : [];
+
+      try {
+        const res = await fetch('/api/about', { cache: 'no-store' });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+
+        const nextHeadline = data?.headline?.[currentLocale] ?? fallbackHeadline;
+        const rawParagraphs = data?.paragraphs?.[currentLocale];
+        const nextParagraphs = Array.isArray(rawParagraphs)
+          ? rawParagraphs.filter(text => typeof text === 'string' && text.trim() !== '')
+          : fallbackParagraphs;
+
+        if (!canceled) {
+          setIntroContent({
+            headline: nextHeadline,
+            paragraphs: nextParagraphs,
+          });
+        }
+      } catch (err) {
+        console.error('載入關於我們內容失敗:', err);
+        if (!canceled) {
+          setIntroContent({
+            headline: fallbackHeadline,
+            paragraphs: fallbackParagraphs,
+          });
+        }
+      }
+    }
+
+    loadAboutContent();
+
+    return () => {
+      canceled = true;
+    };
+  }, [currentLocale, introLocale]);
+
   // --------- 狀態變數 ----------
   const [members, setMembers] = useState([]);
   useLayoutEffect(() => {
@@ -290,8 +344,8 @@ export default function HomePage() {
       >
         <Typewriter
           ref={infoTypewriter1Ref}
-          contentKey={introLocale?.headline ?? currentLocale}
-          content={(<p>{introLocale?.headline}</p>)}
+          contentKey={introContent?.headline ?? currentLocale}
+          content={(<p>{introContent?.headline}</p>)}
           speed={50}
           className='flex flex-col gap-4 drop-shadow-md drop-shadow-white/70 font-extrabold'
         />
@@ -302,15 +356,15 @@ export default function HomePage() {
         >
           <Typewriter
             ref={infoTypewriter2Ref}
-            contentKey={introLocale?.paragraphs ?? currentLocale}
+            contentKey={(introContent?.paragraphs || []).join('||') || currentLocale}
             content={(
               <>
-                {(introLocale?.paragraphs || []).map((text, idx) => (
+                {(introContent?.paragraphs || []).map((text, idx) => (
                   <p key={idx}>{text}</p>
                 ))}
               </>
             )}
-            speed={40}
+            speed={currentLocale === 'zh' ? 40 : 20}
             className='flex flex-col gap-4 drop-shadow-md drop-shadow-white/70 font-extrabold mt-4'
           />
         </div>
