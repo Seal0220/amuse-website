@@ -31,6 +31,23 @@ CREATE TABLE IF NOT EXISTS works (
 );
 `);
 
+// 多作品父子關聯
+db.exec(`
+CREATE TABLE IF NOT EXISTS work_multiple_parents (
+  parent_id   INTEGER PRIMARY KEY,
+  is_multiple INTEGER NOT NULL DEFAULT 1
+);
+`);
+
+db.exec(`
+CREATE TABLE IF NOT EXISTS work_children (
+  parent_id  INTEGER NOT NULL,
+  child_id   INTEGER NOT NULL,
+  position   INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (parent_id, child_id)
+);
+`);
+
 // MEMBERS 表格
 db.exec(`
 CREATE TABLE IF NOT EXISTS members (
@@ -180,6 +197,53 @@ export function updateWorkById(id, data) {
 
 export function deleteWorkById(id) {
   return db.prepare('DELETE FROM works WHERE id = ?').run(id);
+}
+
+// ===== Multiple 父子關聯 =====
+export function listMultipleParents() {
+  return new Set(
+    db.prepare('SELECT parent_id FROM work_multiple_parents WHERE is_multiple = 1').all()
+      .map(r => r.parent_id)
+  );
+}
+
+export function setMultipleParent(parentId, isMultiple) {
+  if (isMultiple) {
+    db.prepare('INSERT OR REPLACE INTO work_multiple_parents (parent_id, is_multiple) VALUES (?, 1)')
+      .run(parentId);
+  } else {
+    db.prepare('DELETE FROM work_multiple_parents WHERE parent_id = ?').run(parentId);
+  }
+}
+
+export function listChildRelations() {
+  return db
+    .prepare('SELECT parent_id as parentId, child_id as childId, position FROM work_children ORDER BY position ASC, child_id ASC')
+    .all();
+}
+
+export function listChildrenOfParent(parentId) {
+  return db
+    .prepare('SELECT child_id as childId FROM work_children WHERE parent_id = ? ORDER BY position ASC, child_id ASC')
+    .all(parentId)
+    .map(r => r.childId);
+}
+
+export function replaceChildren(parentId, childIds) {
+  const tx = db.transaction((pid, ids) => {
+    db.prepare('DELETE FROM work_children WHERE parent_id = ?').run(pid);
+    const stmt = db.prepare('INSERT OR REPLACE INTO work_children (parent_id, child_id, position) VALUES (?, ?, ?)');
+    ids.forEach((cid, idx) => stmt.run(pid, cid, idx));
+  });
+  tx(parentId, childIds);
+}
+
+export function removeRelationsForWork(workId) {
+  const tx = db.transaction(id => {
+    db.prepare('DELETE FROM work_children WHERE parent_id = ? OR child_id = ?').run(id, id);
+    db.prepare('DELETE FROM work_multiple_parents WHERE parent_id = ?').run(id);
+  });
+  tx(workId);
 }
 
 // 依同一類別，照年份/ID 找相鄰作品
