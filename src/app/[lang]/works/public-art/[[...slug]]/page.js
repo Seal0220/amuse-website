@@ -20,7 +20,7 @@ export default async function PublicArtPage({ params }) {
   }
 
   // 有 slug：伺服端直查 DB
-  const work = getWorkBySlug(currentSlug, lang);
+  const work = getWorkBySlug(currentSlug, lang, { includeChildren: true });
   if (!work) return notFound();
 
   const { prevWork, nextWork } = getAdjacentWorks(currentSlug);

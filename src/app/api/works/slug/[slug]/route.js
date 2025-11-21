@@ -7,7 +7,7 @@ export const revalidate = 0;
 export async function GET(_req, context) {
   const { slug } = await context.params;
 
-  const row = getWorkBySlug(slug);
+  const row = getWorkBySlug(slug, 'zh', { includeChildren: true });
   if (!row) {
     return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
   }

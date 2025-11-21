@@ -20,7 +20,7 @@ export default function Work({ lang, work, type }) {
   const aria = workLocale.aria || {};
   const dash = localeDict.pages?.home?.team?.missing || '—';
 
-  const { images, title, year, location, medium, management, description, size = {} } = work || {};
+  const { images, title, year, location, medium, management, description, size = {}, children = [] } = work || {};
 
   // ---------- Typewriter refs ----------
   const fadeOutRef = useRef(null);
@@ -184,6 +184,53 @@ export default function Work({ lang, work, type }) {
               style={{ position: 'absolute', visibility: 'hidden', zIndex: -1 }}
             />
           </div>
+
+          {Array.isArray(children) && children.length > 0 && (
+            <div className='w-full max-w-5xl px-4 sm:px-0 pb-12 space-y-6'>
+              <div className='text-center text-2xl font-semibold tracking-wide text-white/90'>
+                {labels.children || 'Sub Works'}
+              </div>
+              <div className='space-y-8'>
+                {children.map((child, idx) => (
+                  <div key={child.id ?? idx} className='border border-white/10 rounded-2xl overflow-hidden bg-white/5'>
+                    <div className='w-full h-72 sm:h-96 bg-black/50'>
+                      <ImageSlider images={child.images || []} />
+                    </div>
+                    <div className='p-6 sm:p-8 space-y-4 text-white'>
+                      <div className='flex flex-wrap items-baseline gap-2'>
+                        <div className='text-xl sm:text-2xl font-bold tracking-wide'>{child.title || dash}</div>
+                        <div className='text-sm text-white/70'>{child.year || dash}</div>
+                      </div>
+                      <div className='space-y-1 text-sm sm:text-base'>
+                        {[['location', child.location], ['medium', child.medium], ['management', child.management]].map(([k, v]) => (
+                          <div key={k} className='flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3'>
+                            <span className='text-white/60 min-w-28'>{labels[k] || k}</span>
+                            <span className='font-semibold'>{dashIfEmpty(v)}</span>
+                          </div>
+                        ))}
+                        <div className='flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3'>
+                          <span className='text-white/60 min-w-28'>{labels.size || 'Dimensions (cm):'}</span>
+                          <span className='font-semibold'>{(() => {
+                            const childSizeParts = [
+                              child?.size?.length ? `${dims.length || 'Length'} ${child.size.length}` : null,
+                              child?.size?.width ? `${dims.width || 'Width'} ${child.size.width}` : null,
+                              child?.size?.height ? `${dims.height || 'Height'} ${child.size.height}` : null,
+                            ].filter(Boolean);
+                            return childSizeParts.length ? childSizeParts.join(separator) : dash;
+                          })()}</span>
+                        </div>
+                      </div>
+                      {child.description && (
+                        <div className='pt-2 text-sm sm:text-base whitespace-pre-line leading-7 text-white/90'>
+                          {child.description}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

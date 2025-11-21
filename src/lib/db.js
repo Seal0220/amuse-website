@@ -27,7 +27,18 @@ CREATE TABLE IF NOT EXISTS works (
   management  TEXT,                  -- JSON {zh, en}
   description TEXT,                  -- JSON {zh, en}
   images      TEXT DEFAULT '[]',
-  type        TEXT NOT NULL DEFAULT 'public-art'  -- 'public-art', 'exhibition-space'
+  type        TEXT NOT NULL DEFAULT 'public-art',  -- 'public-art', 'exhibition-space'
+  is_multiple INTEGER NOT NULL DEFAULT 0           -- 是否為多作品父層
+);
+`);
+
+// WORK_CHILDREN 關聯表（父子排序）
+db.exec(`
+CREATE TABLE IF NOT EXISTS work_children (
+  parent_id INTEGER NOT NULL,
+  child_id  INTEGER NOT NULL,
+  position  INTEGER DEFAULT 0,
+  PRIMARY KEY (parent_id, child_id)
 );
 `);
 
@@ -97,51 +108,86 @@ function ensureColumn(name, ddl) {
 }
 // 舊資料升級時：若缺 type，就補上並設為 public-art
 ensureColumn('type', `type TEXT NOT NULL DEFAULT 'public-art'`);
+ensureColumn('is_multiple', `is_multiple INTEGER NOT NULL DEFAULT 0`);
 
 // ===== 基本存取函式 =====
-export function getWorkBySlug(slug, lang = 'zh') {
-  const row = db.prepare('SELECT * FROM works WHERE slug = ?').get(slug);
-  if (!row) return null;
-
-  // 解析 JSON 欄位
+function parseWorkRow(row) {
   const parseObj = (s) => {
     try { return JSON.parse(s || '{}'); } catch { return {}; }
   };
   const parseArr = (s) => {
     try { return JSON.parse(s || '[]'); } catch { return []; }
   };
-  const title = parseObj(row.title);
-  const medium = parseObj(row.medium);
-  const location = parseObj(row.location);
-  const management = parseObj(row.management);
-  const description = parseObj(row.description);
   const size = (() => {
     try { return JSON.parse(row.size || '{}'); } catch { return {}; }
   })();
-  const images = parseArr(row.images);
 
-  // 依 lang 回傳對應語系值（fallback zh → en → 任一）
+  return {
+    ...row,
+    title: parseObj(row.title),
+    medium: parseObj(row.medium),
+    location: parseObj(row.location),
+    management: parseObj(row.management),
+    description: parseObj(row.description),
+    images: parseArr(row.images),
+    size,
+    is_multiple: !!row.is_multiple,
+  };
+}
+
+function getChildIdSet() {
+  const rows = db.prepare('SELECT DISTINCT child_id FROM work_children').all();
+  return new Set(rows.map(r => r.child_id));
+}
+
+function getChildrenByParentId(parentId) {
+  return db
+    .prepare(`
+      SELECT w.*, wc.position FROM work_children wc
+      JOIN works w ON w.id = wc.child_id
+      WHERE wc.parent_id = ?
+      ORDER BY wc.position ASC, wc.child_id ASC
+    `)
+    .all(parentId)
+    .map(parseWorkRow);
+}
+
+function formatForLang(work, lang) {
   const pick = (obj) => {
     if (!obj || typeof obj !== 'object') return obj ?? '';
     return obj[lang] ?? obj.zh ?? obj.en ?? Object.values(obj)[0] ?? '';
   };
 
   return {
-    id: row.id,
-    slug: row.slug,
-    title: pick(title),
-    medium: pick(medium),
-    location: pick(location),
-    management: pick(management),
-    description: pick(description),
-    year: row.year || '',
+    id: work.id,
+    slug: work.slug,
+    title: pick(work.title),
+    medium: pick(work.medium),
+    location: pick(work.location),
+    management: pick(work.management),
+    description: pick(work.description),
+    year: work.year || '',
     size: {
-      width: size?.width || '',
-      height: size?.height || '',
-      length: size?.length || '',
+      width: work.size?.width || '',
+      height: work.size?.height || '',
+      length: work.size?.length || '',
     },
-    images,
-    type: row.type || 'public-art',
+    images: Array.isArray(work.images) ? work.images : [],
+    type: work.type || 'public-art',
+    isMultiple: !!work.is_multiple,
+  };
+}
+
+export function getWorkBySlug(slug, lang = 'zh', { includeChildren = false } = {}) {
+  const row = db.prepare('SELECT * FROM works WHERE slug = ?').get(slug);
+  if (!row) return null;
+
+  const parsed = parseWorkRow(row);
+  const children = includeChildren ? getChildrenByParentId(parsed.id).map(w => formatForLang(w, lang)) : [];
+
+  return {
+    ...formatForLang(parsed, lang),
+    children,
   };
 }
 
@@ -154,14 +200,19 @@ export function listWorks(type /* 可選：public-art | exhibition-space */) {
   return db.prepare('SELECT * FROM works ORDER BY year DESC, id DESC').all();
 }
 
+export function listParentWorks(type) {
+  const childSet = getChildIdSet();
+  return listWorks(type).filter(w => !childSet.has(w.id));
+}
+
 export function getWorkById(id) {
   return db.prepare('SELECT * FROM works WHERE id = ?').get(id);
 }
 
 export function insertWork(data) {
   const stmt = db.prepare(`
-    INSERT INTO works (slug, title, medium, size, year, location, management, description, images, type)
-    VALUES (@slug, @title, @medium, @size, @year, @location, @management, @description, @images, @type)
+    INSERT INTO works (slug, title, medium, size, year, location, management, description, images, type, is_multiple)
+    VALUES (@slug, @title, @medium, @size, @year, @location, @management, @description, @images, @type, @is_multiple)
   `);
   const info = stmt.run(data);
   return info.lastInsertRowid;
@@ -172,7 +223,7 @@ export function updateWorkById(id, data) {
     UPDATE works
     SET slug=@slug, title=@title, medium=@medium, size=@size, year=@year,
         location=@location, management=@management, description=@description,
-        images=@images, type=@type
+        images=@images, type=@type, is_multiple=@is_multiple
     WHERE id = @id
   `);
   return stmt.run({ id, ...data });
@@ -182,15 +233,39 @@ export function deleteWorkById(id) {
   return db.prepare('DELETE FROM works WHERE id = ?').run(id);
 }
 
+export function replaceChildren(parentId, childIds) {
+  const del = db.prepare('DELETE FROM work_children WHERE parent_id = ?');
+  const insert = db.prepare('INSERT OR REPLACE INTO work_children (parent_id, child_id, position) VALUES (?, ?, ?)');
+  const tx = db.transaction((pid, ids) => {
+    del.run(pid);
+    ids.forEach((cid, idx) => insert.run(pid, cid, idx));
+  });
+  tx(parentId, childIds);
+}
+
+export function removeRelationsForWork(workId) {
+  db.prepare('DELETE FROM work_children WHERE parent_id = ? OR child_id = ?').run(workId, workId);
+}
+
+export function listChildrenByParent(parentId) {
+  return getChildrenByParentId(parentId);
+}
+
+export function listAllChildIds() {
+  return Array.from(getChildIdSet());
+}
+
 // 依同一類別，照年份/ID 找相鄰作品
 export function getAdjacentWorks(slug) {
   const row = db.prepare('SELECT id, year, type FROM works WHERE slug = ?').get(slug);
   if (!row) return { prevWork: null, nextWork: null };
 
   // 同 type 的清單
+  const childSet = getChildIdSet();
   const rows = db
     .prepare('SELECT * FROM works WHERE type = ? ORDER BY year DESC, id DESC')
-    .all(row.type);
+    .all(row.type)
+    .filter(r => !childSet.has(r.id));
 
   const idx = rows.findIndex(r => r.slug === slug);
   const prevWork = idx > 0 ? rows[idx - 1] : null;

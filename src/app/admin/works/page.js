@@ -34,7 +34,7 @@ export default function AdminWorksPage() {
   // === 載入作品 ===
   async function load() {
     setLoading(true);
-    const res = await fetch('/api/works', { cache: 'no-store' });
+    const res = await fetch('/api/works?expandChildren=true', { cache: 'no-store' });
     const data = await res.json();
     setWorks(data);
     setLoading(false);
@@ -54,6 +54,8 @@ export default function AdminWorksPage() {
     year: '',
     images: [],
     files: [],
+    isMultiple: false,
+    children: [],
     isNew: true,
   };
 
@@ -91,6 +93,28 @@ export default function AdminWorksPage() {
       try { return JSON.parse(w.size || '{}'); } catch { return {}; }
     })();
 
+    const formatChild = (child) => {
+      const childSize = (() => {
+        try { return JSON.parse(child.size || '{}'); } catch { return {}; }
+      })();
+      return {
+        ...child,
+        type: child.type || w.type || 'public-art',
+        title: parse(child.title),
+        medium: parse(child.medium),
+        location: parse(child.location),
+        management: parse(child.management),
+        description: parse(child.description),
+        size: {
+          width: childSize.width || child.size?.width || '',
+          height: childSize.height || child.size?.height || '',
+          length: childSize.length || child.size?.length || '',
+        },
+        images: parseArr(child.images),
+        files: [],
+      };
+    };
+
     setSelected({
       ...w,
       type: w.type || 'public-art',
@@ -106,6 +130,8 @@ export default function AdminWorksPage() {
       },
       images: parseArr(w.images),
       files: [],
+      isMultiple: !!(w.isMultiple ?? w.is_multiple),
+      children: Array.isArray(w.children) ? w.children.map(formatChild) : [],
       isNew: false,
     });
 
@@ -117,6 +143,59 @@ export default function AdminWorksPage() {
     setSelected(v => ({
       ...v,
       [key]: { ...v[key], [lang]: value },
+    }));
+  };
+
+  useEffect(() => {
+    if (!selected || !(selected.children || []).length) return;
+    setSelected(v => ({
+      ...v,
+      children: (v.children || []).map(child => ({ ...child, type: v.type })),
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected?.type]);
+
+  const childTemplate = () => ({
+    slug: '',
+    type: selected?.type || 'public-art',
+    title: { zh: '', en: '' },
+    medium: { zh: '', en: '' },
+    location: { zh: '', en: '' },
+    management: { zh: '', en: '' },
+    description: { zh: '', en: '' },
+    size: { width: '', height: '', length: '' },
+    year: '',
+    images: [],
+    files: [],
+  });
+
+  const updateChild = (idx, updater) => {
+    setSelected(v => {
+      const list = Array.isArray(v.children) ? [...v.children] : [];
+      const next = updater(list[idx] || childTemplate());
+      list[idx] = next;
+      return { ...v, children: list };
+    });
+  };
+
+  const updateChildNested = (idx, key, value) => {
+    updateChild(idx, child => ({
+      ...child,
+      [key]: { ...child[key], [lang]: value },
+    }));
+  };
+
+  const addChild = () => {
+    setSelected(v => ({
+      ...v,
+      children: [...(v.children || []), childTemplate()],
+    }));
+  };
+
+  const removeChild = (idx) => {
+    setSelected(v => ({
+      ...v,
+      children: (v.children || []).filter((_, i) => i !== idx),
     }));
   };
 
@@ -134,15 +213,43 @@ export default function AdminWorksPage() {
       }
       setMsg('上傳中...');
 
-      let uploadedUrls = [];
-      if (selected.files && selected.files.length > 0) {
-        uploadedUrls = await uploadFilesToSlug(selected.files, selected.slug);
+      const prepareImages = async (entry) => {
+        if (!entry.slug) throw new Error('子作品缺少 slug');
+        if (entry.files && entry.files.length > 0) {
+          const urls = await uploadFilesToSlug(entry.files, entry.slug);
+          return [
+            ...(entry.images || []).filter(img => !img.startsWith('blob:')),
+            ...urls,
+          ];
+        }
+        return (entry.images || []).filter(img => !img.startsWith('blob:'));
+      };
+
+      const resolvedType = selected.type === 'exhibition-space' ? 'exhibition-space' : 'public-art';
+      const payloadImages = await prepareImages(selected);
+
+      const childPayloads = [];
+      if (selected.isMultiple) {
+        for (const child of selected.children || []) {
+          if (!child.slug || !child.title?.zh) {
+            throw new Error('子作品需填 slug 與中文標題');
+          }
+          const childImages = await prepareImages(child);
+          // 排除檔案欄位，避免 JSON 化失敗
+          const { files: _files, ...rest } = child;
+          childPayloads.push({
+            ...rest,
+            slug: child.slug.trim(),
+            type: resolvedType,
+            images: childImages,
+          });
+        }
       }
 
       // === 組 payload ===
       const payload = {
         slug: selected.slug.trim(),
-        type: selected.type === 'exhibition-space' ? 'exhibition-space' : 'public-art',
+        type: resolvedType,
         title: selected.title,
         medium: selected.medium,
         location: selected.location,
@@ -154,13 +261,9 @@ export default function AdminWorksPage() {
           length: selected.size?.length ?? '',
         },
         year: selected.year,
-        images:
-          uploadedUrls.length > 0
-            ? [
-              ...selected.images.filter(img => !img.startsWith('blob:')),
-              ...uploadedUrls,
-            ]
-            : selected.images.filter(img => !img.startsWith('blob:')),
+        images: payloadImages,
+        isMultiple: !!selected.isMultiple,
+        children: childPayloads,
       };
 
       const res = await fetch(
@@ -241,6 +344,7 @@ export default function AdminWorksPage() {
             .map(w => {
               let title = '';
               try { title = JSON.parse(w.title || '{}').zh || ''; } catch { }
+              const isMultiple = w.is_multiple || w.isMultiple;
               return (
                 <li key={w.id}>
                   <button
@@ -254,6 +358,11 @@ export default function AdminWorksPage() {
                       <span className='text-[10px] px-2 py-0.5 rounded-full border border-white/15 bg-green-500/30'>
                         公共藝術
                       </span>
+                      {isMultiple && (
+                        <span className='text-[10px] px-2 py-0.5 rounded-full border border-white/15 bg-purple-500/30'>
+                          multiple
+                        </span>
+                      )}
                     </div>
                     <div className='text-xs opacity-70'>
                       {w.year || '—'} · {w.slug}
@@ -303,6 +412,7 @@ export default function AdminWorksPage() {
             .map(w => {
               let title = '';
               try { title = JSON.parse(w.title || '{}').zh || ''; } catch { }
+              const isMultiple = w.is_multiple || w.isMultiple;
               return (
                 <li key={w.id}>
                   <button
@@ -316,6 +426,11 @@ export default function AdminWorksPage() {
                       <span className='text-[10px] px-2 py-0.5 rounded-full border border-white/15 bg-orange-500/30'>
                         展示空間
                       </span>
+                      {isMultiple && (
+                        <span className='text-[10px] px-2 py-0.5 rounded-full border border-white/15 bg-purple-500/30'>
+                          multiple
+                        </span>
+                      )}
                     </div>
                     <div className='text-xs opacity-70'>
                       {w.year || '—'} · {w.slug}
@@ -431,7 +546,7 @@ export default function AdminWorksPage() {
               </div>
 
               {/* 類別 + 基本欄位 */}
-              <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>
+              <div className='grid grid-cols-1 md:grid-cols-4 gap-3'>
                 <label className='col-span-1'>
                   <div className='mb-1 text-sm opacity-80'>類別</div>
                   <select
@@ -442,6 +557,18 @@ export default function AdminWorksPage() {
                     <option value='public-art'>公共藝術</option>
                     <option value='exhibition-space'>展示空間</option>
                   </select>
+                </label>
+                <label className='col-span-1 flex items-end gap-2'>
+                  <input
+                    type='checkbox'
+                    className='w-4 h-4'
+                    checked={!!selected.isMultiple}
+                    onChange={e => setSelected(v => ({ ...v, isMultiple: e.target.checked }))}
+                  />
+                  <div>
+                    <div className='text-sm opacity-80'>Multiple（多子作品）</div>
+                    <div className='text-xs opacity-60'>開啟後可於下方新增子作品</div>
+                  </div>
                 </label>
                 <label className='col-span-1'>
                   <div className='mb-1 text-sm opacity-80'>Slug（網址代稱）</div>
@@ -570,6 +697,150 @@ export default function AdminWorksPage() {
                   </div>
                 )}
               </div>
+
+              {/* 子作品編輯 */}
+              {selected.isMultiple && (
+                <div className='border-t border-white/15 pt-6 space-y-4'>
+                  <div className='flex items-center justify-between'>
+                    <div className='text-lg font-semibold'>子作品</div>
+                    <button
+                      type='button'
+                      onClick={addChild}
+                      className='px-3 py-1 rounded bg-white/10 hover:bg-white/20 transition text-sm'
+                    >
+                      + 新增子作品
+                    </button>
+                  </div>
+
+                  {(selected.children || []).length === 0 && (
+                    <div className='text-sm text-white/60'>目前沒有子作品，點右上角新增。</div>
+                  )}
+
+                  {(selected.children || []).map((child, idx) => (
+                    <div key={child.id ?? idx} className='p-4 md:p-5 border border-white/15 rounded-xl bg-white/5 space-y-4'>
+                      <div className='flex items-center justify-between gap-3'>
+                        <div className='font-semibold text-white/80'>子作品 #{idx + 1}</div>
+                        <button
+                          type='button'
+                          onClick={() => removeChild(idx)}
+                          className='text-xs px-3 py-1 rounded bg-red-600/80 hover:bg-red-600 transition'
+                        >
+                          移除
+                        </button>
+                      </div>
+
+                      <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>
+                        <label className='col-span-1'>
+                          <div className='mb-1 text-sm opacity-80'>Slug</div>
+                          <input
+                            required
+                            className='w-full px-3 py-2 rounded bg-white/5 border border-white/15'
+                            value={child.slug}
+                            onChange={e => updateChild(idx, c => ({ ...c, slug: e.target.value }))}
+                          />
+                        </label>
+                        <label className='col-span-1'>
+                          <div className='mb-1 text-sm opacity-80'>年份</div>
+                          <select
+                            className='w-full px-3 py-2 rounded bg-white/5 border border-white/15'
+                            value={child.year ?? ''}
+                            onChange={e => updateChild(idx, c => ({ ...c, year: e.target.value }))}
+                          >
+                            <option value=''>—</option>
+                            {yearOptions.map(y => (<option key={y} value={y}>{y}</option>))}
+                          </select>
+                        </label>
+                        <div className='col-span-1 text-sm text-white/60 flex items-end'>類別同步父層：{selected.type === 'exhibition-space' ? '展示空間' : '公共藝術'}</div>
+                      </div>
+
+                      <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>
+                        {['length', 'width', 'height'].map(k => (
+                          <label key={k}>
+                            <div className='mb-1 text-sm opacity-80'>
+                              {k === 'width' ? '寬（cm）' : k === 'height' ? '高（cm）' : '長（cm）'}
+                            </div>
+                            <input
+                              className='w-full px-3 py-2 rounded bg-white/5 border border-white/15'
+                              value={child.size?.[k] ?? ''}
+                              onChange={e => updateChild(idx, c => ({ ...c, size: { ...c.size, [k]: e.target.value } }))}
+                            />
+                          </label>
+                        ))}
+                      </div>
+
+                      {[['title', '標題', true], ['medium', '媒材', false], ['location', '設置地點', false], ['management', '管理單位', false]].map(([key, label, required]) => (
+                        <label key={key} className='block'>
+                          <div className='mb-1 text-sm opacity-80'>
+                            {label}（{lang === 'zh' ? '中文' : '英文'}）
+                          </div>
+                          <input
+                            required={required}
+                            type='text'
+                            className='w-full px-3 py-2 rounded bg-white/5 border border-white/15'
+                            value={child[key]?.[lang] ?? ''}
+                            onChange={e => updateChildNested(idx, key, e.target.value)}
+                          />
+                        </label>
+                      ))}
+
+                      <label className='block'>
+                        <div className='mb-1 text-sm opacity-80'>作品描述（{lang === 'zh' ? '中文' : '英文'}）</div>
+                        <textarea
+                          rows={6}
+                          className='w-full px-3 py-2 rounded bg-white/5 border border-white/15'
+                          value={child.description?.[lang] ?? ''}
+                          onChange={e => updateChildNested(idx, 'description', e.target.value)}
+                        />
+                      </label>
+
+                      <div className='space-y-2'>
+                        <label className='mb-1 text-sm opacity-80'>圖片（可多選）</label>
+                        <input
+                          type='file'
+                          multiple
+                          accept='image/*'
+                          onChange={e => {
+                            const files = e.target.files;
+                            if (!files || files.length === 0) return;
+                            const tempUrls = [...files].map(f => URL.createObjectURL(f));
+                            updateChild(idx, c => ({
+                              ...c,
+                              files,
+                              images: [...(c.images || []), ...tempUrls],
+                            }));
+                          }}
+                          className='text-sm p-2 border cursor-pointer rounded bg-white/5 border-white/15'
+                        />
+
+                        {child.images?.length > 0 && (
+                          <div className='grid grid-cols-2 md:grid-cols-3 gap-3'>
+                            {child.images.map((img, i) => (
+                              <div key={i} className='relative group'>
+                                <img
+                                  src={img}
+                                  alt={`child-${idx}-image-${i}`}
+                                  className='w-full aspect-square object-cover rounded border border-white/10'
+                                />
+                                <button
+                                  type='button'
+                                  onClick={() => updateChild(idx, c => ({
+                                    ...c,
+                                    images: (c.images || []).filter((_, idx2) => idx2 !== i),
+                                  }))}
+                                  className='absolute top-2 right-2 bg-black/70 text-white rounded-full size-6 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition'
+                                  aria-label='刪除圖片'
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* 操作按鈕 */}
               <div className='flex flex-wrap gap-3 pt-4'>
