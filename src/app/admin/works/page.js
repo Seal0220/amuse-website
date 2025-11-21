@@ -374,17 +374,19 @@ export default function AdminWorksPage() {
           </section>
         ) : (
           // ====== 桌機版：左側固定清單 ======
-          <aside className='hidden md:flex md:flex-col md:w-90 md:h-screen border-r border-white/15'>
-            <div className='p-4 text-xl font-semibold border-b border-neutral-800 tracking-wide'>
-              作品列表
-            </div>
-            <div className='p-4'>
-              <button
-                onClick={() => selectWork(null)}
-                className='px-2 py-1 text-sm bg-white/10 hover:bg-white/20 rounded cursor-pointer transition'
-              >
-                + 新增
-              </button>
+          <aside className='hidden md:flex md:flex-col md:w-90 md:h-screen border-r border-white/15 gap-6'>
+            <div className='flex flex-row justify-between'>
+              <div className='p-4 text-xl font-semibold border-b border-neutral-800 tracking-wide'>
+                作品列表
+              </div>
+              <div className='p-4'>
+                <button
+                  onClick={() => selectWork(null)}
+                  className='px-2 py-1 text-sm bg-white/10 hover:bg-white/20 rounded cursor-pointer transition'
+                >
+                  + 新增
+                </button>
+              </div>
             </div>
             <div className='flex-1 overflow-y-auto px-4 pb-4'>
               {loading ? (
@@ -395,9 +397,6 @@ export default function AdminWorksPage() {
                 <GroupedLists onPick={selectWork} />
               )}
             </div>
-            <footer className='p-3 text-xs text-neutral-500 border-t border-neutral-800'>
-              © {year} Admin Dashboard
-            </footer>
           </aside>
         )}
 

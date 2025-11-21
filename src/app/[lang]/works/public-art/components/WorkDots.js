@@ -116,6 +116,7 @@ const WorkDots = forwardRef(function WorkDots(
     hoverSize = 40,
     worksByYear = [],  // [[{slug,title,images}, ...], ...]，索引與 years 一致（非 CENTER）
     labelOffset = 18,  // 文字相對點中心的向下位移（px）
+    fadeOutRef = null,
   },
   apiRef
 ) {
@@ -244,7 +245,13 @@ const WorkDots = forwardRef(function WorkDots(
           if (dot.dataset.state !== 'active') return; // 未放大不跳轉
           const to = dot.dataset.href;
           if (to) {
-            try { router.push(to); } catch (_) { }
+            try {
+              fadeOutRef.current?.onComplete(() => {
+                router.push(to);
+              });
+              fadeOutRef.current?.start();
+            }
+            catch (_) { }
           }
         };
         const onClick = (e) => { e.preventDefault(); triggerClick(); };

@@ -37,3 +37,9 @@ body {
     opacity: 0.9;
   }
 }
+
+
+/* 當螢幕寬:高 ≳ 2:1 時套用 0.8 縮放（可依需求調整範圍） */
+@media (min-aspect-ratio: 2/1) and (max-aspect-ratio: 3/1) {
+  .fit-wide-scale { --scale: 0.8; }
+}

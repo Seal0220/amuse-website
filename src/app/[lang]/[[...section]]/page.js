@@ -440,7 +440,7 @@ export default function HomePage() {
           <div
             ref={memberGroupRef}
             style={{ transform: 'translateY(75lvh)' }}
-            className='absolute z-6 top-0 flex justify-center items-center gap-0 transition ease-in-out duration-700'
+            className='absolute z-11 top-0 flex justify-center items-center gap-0 transition ease-in-out duration-700'
           >
             {members.map((member, i) => {
               const name = pickLocalized(currentLocale, member?.name, teamLocale?.untitled ?? '');

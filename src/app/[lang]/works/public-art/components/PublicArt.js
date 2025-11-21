@@ -7,6 +7,7 @@ import WorkDots from './WorkDots';
 import Typewriter from '@/app/components/Typewriter';
 import useLocale from '@/app/hooks/useLocale';
 import useWindowWidth from '@/app/hooks/useWindowWidth';
+import FadeOut from '@/app/components/FadeOut';
 
 /**
  * 動態：一年一軌道、一作一點（public-art）
@@ -93,6 +94,8 @@ export default function PublicArt() {
   useAxisWobbleRef(axisRef, basicAxisDeg, wobbleRangeDeg, 0.25, textRefs.current);
 
   const workDotsRef = useRef(null);
+
+  const fadeOutRef = useRef(null);
 
   // useBreathingNoise(centerTickRef, { baseBlur: 64, baseSpread: 16 });
   useBreathingNoise(lineRef, { baseBlur: 32, baseSpread: 2, speed: 0.5, isScale: false });
@@ -259,6 +262,7 @@ export default function PublicArt() {
             centerVoidHalfDeg={wobbleRangeDeg / 2}
             keepCenter={false}
             worksByYear={worksByYear}
+            fadeOutRef={fadeOutRef}
           />
 
           {/* 軸 */}
@@ -309,6 +313,8 @@ export default function PublicArt() {
           </div>
         </div>
       </div>
+
+      <FadeOut ref={fadeOutRef} />
     </div>
   );
 }

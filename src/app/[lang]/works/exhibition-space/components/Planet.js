@@ -1,8 +1,14 @@
 'use client';
-import React, { useMemo } from 'react';
+
+import React, {
+  useMemo,
+  useEffect,
+  useRef,
+  useCallback,
+  useState,
+} from 'react';
 import useWindowWidth from '@/app/hooks/useWindowWidth';
 
-// 可重現亂數（依 seed）
 function mulberry32(seed) {
   let t = seed >>> 0;
   return function () {
@@ -12,6 +18,7 @@ function mulberry32(seed) {
     return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
   };
 }
+
 const strSeed = (s) => {
   let h = 2166136261;
   for (let i = 0; i < (s || '').length; i++) {
@@ -21,152 +28,344 @@ const strSeed = (s) => {
   return Math.abs(h);
 };
 
+const CANVAS_PADDING = 60;
+
 export default function Planet({ work, index = 0, onClick }) {
   const { isBelowSize } = useWindowWidth();
+  const canvasParentRef = useRef(null);
+
+  const hoverRef = useRef(false);
+  const [isHovered, setIsHovered] = useState(false);
+
+  const [isLoaded, setIsLoaded] = useState(false);
+  useEffect(() => setIsLoaded(true), []);
+
+  const seed = strSeed(work.slug || `${index}`);
+  const random = mulberry32(seed);
+
   const base =
-    isBelowSize('sm') ? 120
-      : isBelowSize('md') ? 180
+    isBelowSize('sm') ? 180
+      : isBelowSize('md') ? 220
         : isBelowSize('lg') ? 260
-          : isBelowSize('xl') ? 320
-            : 380;
+          : isBelowSize('xl') ? 300
+            : 340;
 
   const planet = useMemo(() => {
-    // 取第一張圖
-    const img = work.images[0];
+    const size = base + Math.floor(random() * 40) - 20;
+    const diskRadius = size * 0.45;
 
-    // 穩定亂數
-    const seed = strSeed(work.slug || `${index}`);
-    const rnd = mulberry32(seed);
-
-    // 參數
-    const x = index === 0 ? '25%' : '75%';
-    const y = '50%';
-
-    // 最終尺寸（保留你的隨機微調）
-    const size = base + Math.floor(rnd() * 40) - 20;   // 手機較小、桌機較大，附隨機微調
-
-    const tilt = index === 0 ? (rnd() * 20 - 30) : (40 + rnd() * 10); // 左：-20~20deg；右：70~80deg
-    const rings = index === 0 ? 3 : 3 + Math.floor(rnd() * 2);        // 左 3，右 3~4
-    const ellipseScale = index === 0 ? (1.6 + rnd() * 0.4) : 1.05;    // 左扁、右直
-    const ringOpacity = index === 0 ? 0.35 : 0.45;
-
-    const satCount = index === 0 ? 2 : 0;
-    const satRadii = Array.from({ length: satCount }).map(() => 0.85 + rnd() * 0.6);
-    const satSize = 12 + Math.floor(rnd() * 8);
-
-    // 穩定 keyframes 前綴，避免重名
-    const kfPrefix = `orbit_${strSeed(work.slug || `${index}`)}`;
-
-    // 顯示名稱
     let displayTitle = work.slug;
     try {
       const t = JSON.parse(work.title || '{}');
-      displayTitle = t.zh || t.en || work.slug;
+      displayTitle = t['zh-tw'] || t.zh || t.en || work.slug;
     } catch {
       displayTitle = work.title || work.slug;
     }
 
     return {
-      img, x, y, size, tilt, rings, ellipseScale, ringOpacity,
-      satRadii, satSize, kfPrefix, displayTitle,
+      size,
+      diskRadius,
+      displayTitle,
       year: work.year,
     };
   }, [work, index, base]);
 
-  const handleClick = () => {
-    onClick?.(work.slug);
-  };
+  const handleClick = useCallback(() => {
+      onClick?.(work.slug);
+  }, [onClick, work.slug]);
+
+  // 命中測試：滑鼠是否在球內
+  const isPointInDisk = useCallback(
+    (clientX, clientY) => {
+      const el = canvasParentRef.current;
+      if (!el) return false;
+
+      const rect = el.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      const dx = clientX - centerX;
+      const dy = clientY - centerY;
+      const distanceSq = dx * dx + dy * dy;
+
+      const baseSize = planet.size + CANVAS_PADDING;
+      const scaleFactor = baseSize > 0 ? rect.width / baseSize : 1;
+      const radius = planet.diskRadius * scaleFactor;
+
+      return distanceSq <= radius * radius;
+    },
+    [planet.size, planet.diskRadius],
+  );
+
+  const handleMouseMove = useCallback(
+    (e) => {
+      const inside = isPointInDisk(e.clientX, e.clientY);
+      hoverRef.current = inside;
+      setIsHovered((prev) => (prev === inside ? prev : inside));
+    },
+    [isPointInDisk],
+  );
+
+  const handleMouseLeave = useCallback(() => {
+    hoverRef.current = false;
+    setIsHovered(false);
+  }, []);
+
+  const handleMouseUp = useCallback(
+    (e) => {
+      if (isPointInDisk(e.clientX, e.clientY)) {
+        handleClick();
+      }
+    },
+    [isPointInDisk, handleClick],
+  );
+
+  useEffect(() => {
+    let p5Instance = null;
+    let cancelled = false;
+    const padding = CANVAS_PADDING;
+    let planetTexture = null;
+    const orbitBalls = [], numBalls = 3;
+    let orbitTiltEase = 0;
+
+    const init = async () => {
+      if (!canvasParentRef.current) return;
+      const P5 = (await import('p5')).default;
+
+      const sketch = (p) => {
+        // 初始化 orbitBalls 資料
+        for (let i = 0; i < numBalls; i++) {
+          orbitBalls.push({
+            phase: random() * p.TWO_PI,
+            speed: 0.2 + random() * 0.6,
+            size: 7 + random() * 10,
+            radiusScale: 0.9 + random() * 0.2,
+          });
+        }
+
+        // 角度在 [30,60] ∪ [120,150] 的 helper
+        const randomAngleDeg = () => {
+          const r = random();
+          const span = 30;
+          if (r < 0.5) {
+            const t = random();
+            return 30 + t * span;
+          } else {
+            const t = random();
+            return 120 + t * span;
+          }
+        };
+
+        // 只算一次，這顆星球固定的傾角
+        const angleXDeg = randomAngleDeg();
+        const angleYDeg = randomAngleDeg();
+
+        const createSquareTexture = (img, size) => {
+          const pg = p.createGraphics(size, size);
+          pg.background(0, 0);
+
+          const imgAspect = img.width / img.height;
+          let drawW, drawH, drawX, drawY;
+
+          if (imgAspect > 1) {
+            // 寬圖：以高為基準
+            drawH = size;
+            drawW = size * imgAspect;
+            drawY = 0;
+            drawX = (size - drawW) / 2;
+          } else {
+            // 窄圖：以寬為基準
+            drawW = size;
+            drawH = size / imgAspect;
+            drawX = 0;
+            drawY = (size - drawH) / 2;
+          }
+
+          pg.image(img, drawX, drawY, drawW, drawH);
+          return pg;
+        };
+
+        // 中央主球（貼圖 + 邊）
+        const drawDisk = (radius, detail) => {
+          p.push();
+          p.noStroke();
+          p.textureMode(p.NORMAL);
+
+          if (planetTexture) {
+            p.texture(planetTexture);
+          } else {
+            p.fill(120);
+          }
+
+          p.beginShape(p.TRIANGLE_FAN);
+          p.vertex(0, 0, 0, 0.5, 0.5);
+          for (let i = 0; i <= detail; i++) {
+            const a = (i / detail) * p.TWO_PI;
+            const x = p.cos(a) * radius;
+            const y = p.sin(a) * radius;
+            const u = 0.5 + p.cos(a) * 0.5;
+            const v = 0.5 + p.sin(a) * 0.5;
+            p.vertex(x, y, 0, u, v);
+          }
+          p.endShape();
+          p.pop();
+
+          // 邊線
+          p.push();
+          p.noFill();
+          p.stroke(200, 90);
+          p.beginShape();
+          for (let i = 0; i <= detail; i++) {
+            const a = (i / detail) * p.TWO_PI;
+            const x = p.cos(a) * radius;
+            const y = p.sin(a) * radius;
+            p.vertex(x, y, 0);
+          }
+          p.endShape(p.CLOSE);
+          p.pop();
+        };
+
+        // 環
+        const drawRing = (radius, detail) => {
+          p.beginShape();
+          for (let i = 0; i <= detail; i++) {
+            const a = (i / detail) * p.TWO_PI;
+            const x = p.cos(a) * radius;
+            const y = p.sin(a) * radius;
+            p.vertex(x, y, 0);
+          }
+          p.endShape(p.CLOSE);
+        };
+
+        // 環上的小球
+        const drawOrbitBalls = (radius, t) => {
+          p.noFill();
+          p.stroke(255);
+
+          for (const ball of orbitBalls) {
+            const a = t * ball.speed + ball.phase;
+            const r = radius * ball.radiusScale;
+
+            const x = p.cos(a) * r;
+            const y = p.sin(a) * r;
+
+            p.push();
+            p.translate(x, y, 0);
+            p.strokeWeight(ball.size);
+            p.point(0, 0);
+            p.pop();
+          }
+        };
+
+        p.setup = () => {
+          p.createCanvas(
+            planet.size + padding,
+            planet.size + padding,
+            p.WEBGL,
+          );
+          p.frameRate(60);
+
+          if (work.images[0]) {
+            p.loadImage(
+              work.images[0],
+              (img) => {
+                const textureSize = planet.size * 2 || 500;
+                planetTexture = createSquareTexture(img, textureSize);
+              },
+              (err) => console.error('planetImage error', err)
+            );
+          }
+        };
+
+        p.draw = () => {
+          p.clear();
+
+          // 主球
+          drawDisk(planet.diskRadius, 120);
+
+          // hover 傾角 easing
+          const isHovering = hoverRef.current;
+          const target = isHovering ? 1 : 0;
+          orbitTiltEase = p.lerp(orbitTiltEase, target, 0.12);
+
+          const maxTiltRad = p.radians(20);
+          const tiltOffset = maxTiltRad * orbitTiltEase;
+
+          // 微微左右傾
+          const t = p.millis() * 0.001;
+          const swayX = p.radians(8) * Math.sin(t * 0.5);
+          const swayY = p.radians(6) * Math.sin(t * 0.7 + 1.3);
+
+          // 環 + 小球
+          p.push();
+          p.rotateX(p.radians(angleXDeg) + swayX + tiltOffset);
+          p.rotateY(p.radians(angleYDeg) + swayY + tiltOffset);
+
+          p.noFill();
+          p.stroke(255);
+
+          p.strokeWeight(1);
+          drawRing(planet.size * 0.51, 120);
+
+          p.strokeWeight(2);
+          drawRing(planet.size * 0.54, 120);
+
+          p.strokeWeight(1);
+          drawRing(planet.size * 0.57, 120);
+
+          // 小球沿著中間那條環跑
+          drawOrbitBalls(planet.size * 0.54, t);
+
+          p.pop();
+        };
+
+      };
+
+      if (!cancelled) {
+        p5Instance = new P5(sketch, canvasParentRef.current);
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      init();
+    }
+
+    return () => {
+      cancelled = true;
+      if (p5Instance) {
+        p5Instance.remove();
+      }
+    };
+  }, [planet.size, planet.diskRadius]);
+
+  const outerSize = planet.size + CANVAS_PADDING;
 
   return (
     <div
-      className='relative select-none transition-all ease-in-out duration-500'
-      style={{ width: planet.size, height: planet.size }}
+      className={
+        'relative select-none transition-all ease-in-out duration-500 ' +
+        (isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-90')
+      }
+      style={{ width: outerSize, height: outerSize }}
     >
-      {/* 本體 */}
-      <button
-        onClick={handleClick}
-        className='block size-full rounded-full overflow-hidden bg-neutral-500 border border-white/20 shadow-[0_0_64px_8px_rgba(255,255,255,0.15)] cursor-pointer hover:scale-[1.1] active:scale-[1.1] transition-all duration-300 ease-in-out'
-        title={planet.displayTitle}
-        style={{
-          backgroundImage: `url(${planet.img})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
+      <div
+        ref={canvasParentRef}
+        className={
+          'w-full h-full transition-transform duration-300 ease-out ' +
+          (isHovered ? 'cursor-pointer scale-110' : 'cursor-default scale-100')
+        }
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        onMouseUp={handleMouseUp}
       />
 
-      {/* 環（傾斜／直立） */}
-      <div
-        className='pointer-events-none absolute inset-0'
-        style={{ transform: `rotate(${planet.tilt}deg)` }}
-      >
-        {Array.from({ length: planet.rings }).map((_, ri) => {
-          const t = (ri / planet.rings) * 0.32;
-          const scale = t * planet.ellipseScale * 0.65;
-          const expand = 1.4 + scale;   // x 軸橢圓
-          const shrink = 0.25 + scale;  // y 軸微縮
-          return (
-            <div
-              key={ri}
-              className={`absolute left-1/2 top-1/2 rounded-full ${ri === Math.floor(planet.rings / 2) ? 'border-4' : 'border-2'}`}
-              style={{
-                width: '92%',
-                height: '92%',
-                transform: `translate(-50%,-50%) scale(${expand},${shrink})`,
-                borderColor: `rgba(255,255,255,${planet.ringOpacity - ri * 0.06})`,
-              }}
-            />
-          );
-        })}
-      </div>
-
-      {/* 衛星（僅左顆） */}
-      {planet.satRadii.length > 0 && (
-        <div
-          className='pointer-events-none absolute inset-0'
-          style={{ transform: `rotate(${planet.tilt}deg)` }}
-        >
-          {planet.satRadii.map((R, si) => {
-            const dur = 12 + si * 4;
-            const name = `${planet.kfPrefix}_${si}`;
-            return (
-              <div
-                key={si}
-                className='absolute left-1/2 top-1/2'
-                style={{
-                  width: 0, height: 0,
-                  transform: 'translate(-50%,-50%)',
-                  animation: `${name} ${dur}s linear infinite`,
-                }}
-              >
-                <div
-                  className='rounded-full bg-white shadow-[0_0_16px_4px_rgba(255,255,255,0.35)]'
-                  style={{
-                    width: planet.satSize, height: planet.satSize,
-                    transform: `translateX(${(planet.size / 2) * R}px)`,
-                  }}
-                />
-              </div>
-            );
-          })}
-          {/* 針對本顆星球專屬的 keyframes，避免命名衝突 */}
-          <style jsx>{`
-            ${planet.satRadii.map((_, si) => {
-            const name = `${planet.kfPrefix}_${si}`;
-            return `
-                @keyframes ${name} {
-                  0% { transform: translate(-50%,-50%) rotate(0deg); }
-                  100% { transform: translate(-50%,-50%) rotate(360deg); }
-                }
-              `;
-          }).join('\n')}
-          `}</style>
+      <div className="absolute left-1/2 -bottom-10 -translate-x-1/2 text-center text-white/90 pointer-events-none">
+        <div className="text-sm font-medium tracking-wide">
+          {planet.displayTitle}
         </div>
-      )}
-
-      {/* 標題 */}
-      <div className='absolute left-1/2 -bottom-10 -translate-x-1/2 text-center text-white/90'>
-        <div className='text-sm font-medium tracking-wide'>{planet.displayTitle}</div>
-        <div className='text-xs text-white/60'>{planet.year}</div>
+        <div className="text-xs text-white/60">
+          {planet.year}
+        </div>
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { IoIosArrowBack } from "react-icons/io";
 import Typewriter, { startTypewriter } from '@/app/components/Typewriter';
 import useLocale from '@/app/hooks/useLocale';
+import FadeOut from '../FadeOut';
 
 export default function Work({ lang, work, type }) {
   const router = useRouter();
@@ -22,6 +23,7 @@ export default function Work({ lang, work, type }) {
   const { images, title, year, location, medium, management, description, size = {} } = work || {};
 
   // ---------- Typewriter refs ----------
+  const fadeOutRef = useRef(null);
   const backTypeRef = useRef(null);
   const backListRef = useRef(null);
   const titleRef = useRef(null);
@@ -96,6 +98,13 @@ export default function Work({ lang, work, type }) {
     };
   }, [description]);
 
+  const backHandler = () => {
+    fadeOutRef.current?.onComplete(() => {
+      router.replace(`/${currentLocale}/works/${type}`);
+    });
+    fadeOutRef.current?.start();
+  }
+
   return (
     <div className='relative w-full min-h-lvh h-auto bg-neutral-800 overflow-x-hidden'>
       <div className='size-full flex flex-col bg-neutral-950'>
@@ -113,7 +122,7 @@ export default function Work({ lang, work, type }) {
           <div className='sticky z-50 w-full top-0 left-0 flex items-center justify-center bg-neutral-950 pt-16 sm:pt-32'>
             <div
               className='absolute flex flex-row gap-1 sm:gap-2 items-center bg-neutral-800 z-51 px-3 sm:px-4 py-2 rounded-full border-2 border-white/30 mr-[40%] select-none cursor-pointer hover:-translate-y-1 shadow-[0_0_12px_4px] hover:shadow-[0_0_24px_12px] active:-translate-y-1 active:shadow-[0_0_24px_12px] shadow-white/15 transition-all duration-300 ease-in-out text-xs sm:text-base'
-              onClick={() => { router.replace(`/${currentLocale}/works/${type}`); }}
+              onClick={backHandler}
               aria-label={aria.back || 'Back to project list'}
             >
               <IoIosArrowBack className='mt-0.5' />
@@ -177,6 +186,8 @@ export default function Work({ lang, work, type }) {
           </div>
         </div>
       </div>
+
+      <FadeOut ref={fadeOutRef} />
     </div>
   );
 }
