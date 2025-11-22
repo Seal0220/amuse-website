@@ -22,7 +22,25 @@ export default function HomePage() {
   const memberTitlePrimary = memberTitles[0] ?? '';
   const memberTitleSecondary = memberTitles[1] ?? memberTitlePrimary;
 
-  const { windowSize, isBelowSize } = useWindowWidth();
+  const { windowSize, windowWidth, windowHeight, isBelowSize } = useWindowWidth();
+
+  const BASE_W = 2560;
+  const BASE_H = 1440;
+
+  const isLandscape =
+    windowWidth && windowHeight && windowWidth > windowHeight;
+
+  const landscapeScale = !isLandscape
+    ? 1
+    : (() => {
+      const sx = windowWidth / BASE_W;
+      const sy = windowHeight / BASE_H;
+      const f = Math.min(sx, sy);
+      const minF = 1280 / BASE_W; // 1280 相對 2560 = 0.5，下限 0.5
+      return Math.max(minF, Math.min(1, f));
+    })();
+
+  console.log('landscapeScale:', landscapeScale);
 
   const [introContent, setIntroContent] = useState({
     headline: introLocale?.headline || '',
@@ -180,11 +198,21 @@ export default function HomePage() {
       if (isBelowSize('xs')) {
         ele.style.lineHeight = '3rem';
         ele.style.fontSize = '3rem';
-        ele.style.transform = 'translate(0, 35lvh)';
+        ele.style.transform = 'translate(0, 34lvh)';
       }
       else if (isBelowSize('md')) {
+        ele.style.lineHeight = '4rem';
+        ele.style.fontSize = '4rem';
+        ele.style.transform = 'translate(0, 35lvh)';
+      }
+      else if (isBelowSize('lg')) {
         ele.style.lineHeight = '5rem';
         ele.style.fontSize = '5rem';
+        ele.style.transform = 'translate(0, 36lvh)';
+      }
+      else if (isBelowSize('xl')) {
+        ele.style.lineHeight = '6rem';
+        ele.style.fontSize = '6rem';
         ele.style.transform = 'translate(0, 38lvh)';
       }
       else {
@@ -205,14 +233,24 @@ export default function HomePage() {
         ele.style.transform = 'translate(2rem, 50lvh)';
       }
       else if (isBelowSize('md')) {
-        ele.style.lineHeight = '2rem';
-        ele.style.fontSize = '1.25rem';
-        ele.style.transform = 'translate(5rem, 55lvh)';
+        ele.style.lineHeight = '1.25rem';
+        ele.style.fontSize = '1rem';
+        ele.style.transform = 'translate(3rem, 55lvh)';
+      }
+      else if (isBelowSize('lg')) {
+        ele.style.lineHeight = '1.25rem';
+        ele.style.fontSize = '1rem';
+        ele.style.transform = 'translate(4rem, 55lvh)';
+      }
+      else if (isBelowSize('xl')) {
+        ele.style.lineHeight = '1.25rem';
+        ele.style.fontSize = '1rem';
+        ele.style.transform = 'translate(20vw, 55lvh)';
       }
       else {
-        ele.style.lineHeight = '2rem';
+        ele.style.lineHeight = '1.5rem';
         ele.style.fontSize = '1.25rem';
-        ele.style.transform = 'translate(5rem, 60lvh)';
+        ele.style.transform = 'translate(20vw, 60lvh)';
       }
 
       ele.style.opacity = '100%';
@@ -227,25 +265,30 @@ export default function HomePage() {
         ele.style.transform = 'translate(2rem, 37lvh)';
       }
       else if (isBelowSize('md')) {
-        ele.style.lineHeight = '2rem';
-        ele.style.fontSize = '1.25rem';
-        ele.style.transform = 'translate(5rem, 40lvh)';
+        ele.style.lineHeight = '1.25rem';
+        ele.style.fontSize = '1rem';
+        ele.style.transform = 'translate(3rem, 40lvh)';
       }
       else if (isBelowSize('lg')) {
-        ele.style.lineHeight = '2rem';
-        ele.style.fontSize = '1.25rem';
+        ele.style.lineHeight = '1.25rem';
+        ele.style.fontSize = '1rem';
+        ele.style.transform = 'translate(4rem, 40lvh)';
+      }
+      else if (isBelowSize('xl')) {
+        ele.style.lineHeight = '1.25rem';
+        ele.style.fontSize = '1rem';
         ele.style.transform = 'translate(5rem, 40lvh)';
       }
       else {
         ele.style.lineHeight = '2rem';
         ele.style.fontSize = '1.25rem';
-        ele.style.transform = 'translate(5rem, 42lvh)';
+        ele.style.transform = 'translate(20vw, 42lvh)';
       }
 
-      ele.style.opacity = '100%';
+      ele.style.opacity = '0%';
     })
     .when({ on: 1.7, to: 3 }, (ele) => {
-      ele.style.transform = 'translate(5rem, 30lvh)';
+      ele.style.transform = 'translate(20vw, 30lvh)';
       ele.style.opacity = '0%'
     })
     .after({ on: 3 }, (ele) => {
@@ -318,7 +361,7 @@ export default function HomePage() {
       membersAni.forEach(memberAni => {
         memberAni.ele.style.scale = 1;
         memberAni.ele.style.opacity = '100%';
-        memberAni.ele.style.margin = isBelowSize('lg') ? '0 1rem' : '0 2rem';
+        memberAni.ele.style.margin = isBelowSize('lg') ? '0 1rem' : '0 1rem';
         memberAni.ele.setIsShowDetail(true);
       });
 
@@ -390,7 +433,7 @@ export default function HomePage() {
       <div
         ref={infoRef}
         style={{ transform: 'translate(-100%, 40lvh)' }}
-        className='fixed z-20 top-0 left-0 drop-shadow-xl drop-shadow-black/70 max-w-[calc(100vw_-_4rem)] sm:max-w-[80vw] transition-all ease-in-out duration-500'
+        className='fixed z-20 top-0 left-0 drop-shadow-xl drop-shadow-black/70 max-w-[calc(100vw_-_4rem)] sm:max-w-3xl 2xl:max-w-[60vw] transition-all ease-in-out duration-500'
       >
         <Typewriter
           ref={infoTypewriter1Ref}
@@ -415,7 +458,7 @@ export default function HomePage() {
               </>
             )}
             speed={currentLocale === 'zh' ? 40 : 20}
-            className='flex flex-col gap-4 drop-shadow-md drop-shadow-white/70 font-extrabold mt-4'
+            className='flex flex-col gap-4 drop-shadow-md drop-shadow-white/70 font-extrabold mt-4 max-w-[80vw] md:max-w-[50vw]'
           />
         </div>
       </div>
@@ -427,7 +470,7 @@ export default function HomePage() {
           style={{ transform: 'translateY(calc(100lvh + 5rem))' }}
           className='fixed z-10 top-0 w-full min-h-lvh flex justify-center bg-neutral-950 p-40 transition ease-in-out duration-700'
         >
-          <h1 className='absolute z-10 right-0 top-34 sm:top-40 text-[4rem] sm:text-[6rem] md:text-[8rem] lg:text-[10rem] xl:text-[12rem] font-bold text-right select-none'>
+          <h1 className='absolute z-10 right-0 top-20 sm:top-[30lvh] text-[4rem] sm:text-[4rem] md:text-[5rem] lg:text-[6rem] xl:text-[8rem] font-bold text-right select-none'>
             <Typewriter
               ref={memberTypewriter1Ref}
               speed={500}
@@ -440,7 +483,7 @@ export default function HomePage() {
           <div
             ref={memberGroupRef}
             style={{ transform: 'translateY(75lvh)' }}
-            className='absolute z-11 top-0 flex justify-center items-center gap-0 transition ease-in-out duration-700'
+            className='absolute z-11 top-0 flex justify-center items-center gap-4 sm:gap-6 md:gap-14 lg:gap-20 xl:gap-28 2xl:gap-32 transition ease-in-out duration-700'
           >
             {members.map((member, i) => {
               const name = pickLocalized(currentLocale, member?.name, teamLocale?.untitled ?? '');

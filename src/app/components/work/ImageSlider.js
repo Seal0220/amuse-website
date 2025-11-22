@@ -60,21 +60,24 @@ export default function ImageSlider({ images = [], initImage = '' }) {
       </PhotoProvider>
 
       {/* 底部操作 bar */}
-      <div className='absolute z-50 bottom-6 left-0 right-0 flex justify-center gap-2'>
-        {images.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrent(i)}
-            className={`w-3 h-3 cursor-pointer rounded-full transition-all ${i === current
-              ? 'bg-white scale-110 shadow-[0_0_8px_2px_rgba(255,255,255,0.6)]'
-              : 'bg-white/40 hover:bg-white/70'
-              }`}
-          />
-        ))}
-      </div>
+      {images.length > 1 && (
+        <>
+          <div className='absolute z-50 bottom-6 left-0 right-0 flex justify-center gap-2'>
+            {images.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrent(i)}
+                className={`w-3 h-3 cursor-pointer rounded-full transition-all ${i === current
+                  ? 'bg-white scale-110 shadow-[0_0_8px_2px_rgba(255,255,255,0.6)]'
+                  : 'bg-white/40 hover:bg-white/70'
+                  }`}
+              />
+            ))}
+          </div>
 
-      {/* 頭尾循環漸變遮罩 */}
-      <div className='absolute z-0 bottom-0 w-full h-20 bg-gradient-to-t from-5% from-neutral-950 via-50% via-neutral-950/70 to-100% to-transparent pointer-events-none'></div>
+          <div className='absolute z-0 bottom-0 w-full h-20 bg-gradient-to-t from-5% from-neutral-950 via-50% via-neutral-950/70 to-100% to-transparent pointer-events-none'></div>
+        </>
+        )}
     </div>
   );
 }

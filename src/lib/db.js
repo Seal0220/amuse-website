@@ -31,6 +31,23 @@ CREATE TABLE IF NOT EXISTS works (
 );
 `);
 
+// 多作品父子關聯
+db.exec(`
+CREATE TABLE IF NOT EXISTS work_multiple_parents (
+  parent_id   INTEGER PRIMARY KEY,
+  is_multiple INTEGER NOT NULL DEFAULT 1
+);
+`);
+
+db.exec(`
+CREATE TABLE IF NOT EXISTS work_children (
+  parent_id  INTEGER NOT NULL,
+  child_id   INTEGER NOT NULL,
+  position   INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (parent_id, child_id)
+);
+`);
+
 // MEMBERS 表格
 db.exec(`
 CREATE TABLE IF NOT EXISTS members (
@@ -99,17 +116,18 @@ function ensureColumn(name, ddl) {
 ensureColumn('type', `type TEXT NOT NULL DEFAULT 'public-art'`);
 
 // ===== 基本存取函式 =====
-export function getWorkBySlug(slug, lang = 'zh') {
-  const row = db.prepare('SELECT * FROM works WHERE slug = ?').get(slug);
+
+// 共用：把 works 資料列依 lang 轉成物件
+function formatWorkRow(row, lang = 'zh') {
   if (!row) return null;
 
-  // 解析 JSON 欄位
   const parseObj = (s) => {
     try { return JSON.parse(s || '{}'); } catch { return {}; }
   };
   const parseArr = (s) => {
     try { return JSON.parse(s || '[]'); } catch { return []; }
   };
+
   const title = parseObj(row.title);
   const medium = parseObj(row.medium);
   const location = parseObj(row.location);
@@ -120,7 +138,6 @@ export function getWorkBySlug(slug, lang = 'zh') {
   })();
   const images = parseArr(row.images);
 
-  // 依 lang 回傳對應語系值（fallback zh → en → 任一）
   const pick = (obj) => {
     if (!obj || typeof obj !== 'object') return obj ?? '';
     return obj[lang] ?? obj.zh ?? obj.en ?? Object.values(obj)[0] ?? '';
@@ -144,6 +161,48 @@ export function getWorkBySlug(slug, lang = 'zh') {
     type: row.type || 'public-art',
   };
 }
+
+export function getWorkBySlug(slug, lang = 'zh') {
+  const row = db.prepare('SELECT * FROM works WHERE slug = ?').get(slug);
+  if (!row) return null;
+
+  // 基本資料
+  const work = formatWorkRow(row, lang);
+
+  // 是否為「多作品父」：有在 work_multiple_parents 且 is_multiple = 1
+  const mp = db
+    .prepare('SELECT is_multiple FROM work_multiple_parents WHERE parent_id = ? LIMIT 1')
+    .get(row.id);
+  const isMultiple = !!(mp && mp.is_multiple);
+
+  // 這個作品底下的子作品（已依 position 排序）
+  const childRows = db.prepare(`
+    SELECT w.*
+    FROM work_children c
+    JOIN works w ON w.id = c.child_id
+    WHERE c.parent_id = ?
+    ORDER BY c.position ASC, c.child_id ASC
+  `).all(row.id);
+  const children = childRows.map(r => formatWorkRow(r, lang));
+
+  // 這個作品是否作為別人的子作品（取一個 parent 即可）
+  const parentRow = db.prepare(`
+    SELECT w.*
+    FROM work_children c
+    JOIN works w ON w.id = c.parent_id
+    WHERE c.child_id = ?
+    LIMIT 1
+  `).get(row.id);
+  const parent = parentRow ? formatWorkRow(parentRow, lang) : null;
+
+  return {
+    ...work,
+    isMultiple,   // 是否為多作品父
+    parent,       // 若本身是子作品，這裡是其父作品物件；否則為 null
+    children,     // 若是多作品父，這裡是完整子作品清單；否則為 []
+  };
+}
+
 
 export function listWorks(type /* 可選：public-art | exhibition-space */) {
   if (type) {
@@ -180,6 +239,53 @@ export function updateWorkById(id, data) {
 
 export function deleteWorkById(id) {
   return db.prepare('DELETE FROM works WHERE id = ?').run(id);
+}
+
+// ===== Multiple 父子關聯 =====
+export function listMultipleParents() {
+  return new Set(
+    db.prepare('SELECT parent_id FROM work_multiple_parents WHERE is_multiple = 1').all()
+      .map(r => r.parent_id)
+  );
+}
+
+export function setMultipleParent(parentId, isMultiple) {
+  if (isMultiple) {
+    db.prepare('INSERT OR REPLACE INTO work_multiple_parents (parent_id, is_multiple) VALUES (?, 1)')
+      .run(parentId);
+  } else {
+    db.prepare('DELETE FROM work_multiple_parents WHERE parent_id = ?').run(parentId);
+  }
+}
+
+export function listChildRelations() {
+  return db
+    .prepare('SELECT parent_id as parentId, child_id as childId, position FROM work_children ORDER BY position ASC, child_id ASC')
+    .all();
+}
+
+export function listChildrenOfParent(parentId) {
+  return db
+    .prepare('SELECT child_id as childId FROM work_children WHERE parent_id = ? ORDER BY position ASC, child_id ASC')
+    .all(parentId)
+    .map(r => r.childId);
+}
+
+export function replaceChildren(parentId, childIds) {
+  const tx = db.transaction((pid, ids) => {
+    db.prepare('DELETE FROM work_children WHERE parent_id = ?').run(pid);
+    const stmt = db.prepare('INSERT OR REPLACE INTO work_children (parent_id, child_id, position) VALUES (?, ?, ?)');
+    ids.forEach((cid, idx) => stmt.run(pid, cid, idx));
+  });
+  tx(parentId, childIds);
+}
+
+export function removeRelationsForWork(workId) {
+  const tx = db.transaction(id => {
+    db.prepare('DELETE FROM work_children WHERE parent_id = ? OR child_id = ?').run(id, id);
+    db.prepare('DELETE FROM work_multiple_parents WHERE parent_id = ?').run(id);
+  });
+  tx(workId);
 }
 
 // 依同一類別，照年份/ID 找相鄰作品
