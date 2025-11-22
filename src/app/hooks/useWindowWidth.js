@@ -7,6 +7,8 @@ import { useState, useEffect } from 'react';
  * lg: 1024px
  * xl: 1280px
  * 2xl: 1536px
+ * 3xl: 1920px
+ * 4xl: 2560px
  */
 const sizes = {
   xs: 0,
@@ -15,6 +17,8 @@ const sizes = {
   lg: 1024,
   xl: 1280,
   '2xl': 1536,
+  '3xl': 1920,
+  '4xl': 2560,
 };
 
 export default function useWindowWidth() {

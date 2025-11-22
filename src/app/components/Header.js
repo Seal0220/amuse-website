@@ -61,7 +61,7 @@ export default function Header() {
 
   return (
     <header className='fixed top-0 w-lvw z-200 text-white bg-gradient-to-b from-black/80 via-black/40 to-transparent overflow-hidden pointer-events-none'>
-      <div className='mx-auto flex items-center justify-between px-4 2xl:px-4 py-4 2xl:py-4'>
+      <div className='mx-auto flex items-center justify-between px-4 2xl:px-6 3xl:px-10 4xl:px-14 py-4 3xl:py-5 4xl:py-6'>
         {/* 左：LOGO（手機/桌機皆顯示） */}
         <div
           className='flex items-center active:-translate-y-1 hover:-translate-y-1 cursor-pointer transition-all duration-300 ease-in-out pointer-events-auto'
@@ -70,15 +70,15 @@ export default function Header() {
           <img
             src='/Amuse-LOGO-w.png'
             alt={locale.company_name}
-            className='h-14 2xl:h-20 object-contain select-none pointer-events-none'
+            className='h-14 2xl:h-20 3xl:h-24 4xl:h-28 object-contain select-none pointer-events-none'
             draggable='false'
             onContextMenu={(e) => e.preventDefault()}
           />
         </div>
 
         {/* 右：桌機導覽（md 以上） */}
-        <nav className='hidden lg:flex flex-row gap-10 pointer-events-auto pr-4 xl:pr-8'>
-          <div className='flex flex-row gap-12 xl:gap-16 2xl:gap-20 text-base xl:text-lg tracking-wide items-center'>
+        <nav className='hidden lg:flex flex-row gap-10 pointer-events-auto pr-4 xl:pr-8 3xl:pr-10 4xl:pr-16'>
+          <div className='flex flex-row gap-12 xl:gap-16 2xl:gap-20 3xl:gap-24 4xl:gap-28 text-base xl:text-lg 3xl:text-xl 4xl:text-2xl tracking-wide items-center'>
             <a
               href={`/${currentLocale}`}
               onClick={(e) => navigateSamePage(e, 'home')}
@@ -110,7 +110,7 @@ export default function Header() {
 
           <button
             onClick={toggleLang}
-            className='ml-2 xl:ml-6 border border-neutral-500 px-3 py-1 rounded hover:bg-neutral-800 transition cursor-pointer'
+            className='ml-2 xl:ml-6 3xl:ml-8 4xl:ml-10 border border-neutral-500 px-3 py-1 3xl:px-4 3xl:py-2 4xl:px-5 4xl:py-3 rounded hover:bg-neutral-800 transition cursor-pointer'
           >
             {currentLocale === 'zh' ? 'EN' : '中'}
           </button>

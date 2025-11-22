@@ -213,7 +213,22 @@ export default function HomePage() {
       else if (isBelowSize('xl')) {
         ele.style.lineHeight = '6rem';
         ele.style.fontSize = '6rem';
+        ele.style.transform = 'translate(0, 37lvh)';
+      }
+      else if (isBelowSize('2xl')) {
+        ele.style.lineHeight = '6.5rem';
+        ele.style.fontSize = '6.5rem';
         ele.style.transform = 'translate(0, 38lvh)';
+      }
+      else if (isBelowSize('3xl')) {
+        ele.style.lineHeight = '7.25rem';
+        ele.style.fontSize = '7.25rem';
+        ele.style.transform = 'translate(0, 39lvh)';
+      }
+      else if (isBelowSize('4xl')) {
+        ele.style.lineHeight = '7.75rem';
+        ele.style.fontSize = '7.75rem';
+        ele.style.transform = 'translate(0, 39.5lvh)';
       }
       else {
         ele.style.lineHeight = '8rem';
@@ -245,7 +260,22 @@ export default function HomePage() {
       else if (isBelowSize('xl')) {
         ele.style.lineHeight = '1.25rem';
         ele.style.fontSize = '1rem';
-        ele.style.transform = 'translate(20vw, 55lvh)';
+        ele.style.transform = 'translate(12vw, 55lvh)';
+      }
+      else if (isBelowSize('2xl')) {
+        ele.style.lineHeight = '1.35rem';
+        ele.style.fontSize = '1.1rem';
+        ele.style.transform = 'translate(16vw, 56lvh)';
+      }
+      else if (isBelowSize('3xl')) {
+        ele.style.lineHeight = '1.4rem';
+        ele.style.fontSize = '1.15rem';
+        ele.style.transform = 'translate(18vw, 58lvh)';
+      }
+      else if (isBelowSize('4xl')) {
+        ele.style.lineHeight = '1.45rem';
+        ele.style.fontSize = '1.2rem';
+        ele.style.transform = 'translate(19vw, 59lvh)';
       }
       else {
         ele.style.lineHeight = '1.5rem';
@@ -278,6 +308,21 @@ export default function HomePage() {
         ele.style.lineHeight = '1.25rem';
         ele.style.fontSize = '1rem';
         ele.style.transform = 'translate(5rem, 40lvh)';
+      }
+      else if (isBelowSize('2xl')) {
+        ele.style.lineHeight = '1.5rem';
+        ele.style.fontSize = '1.15rem';
+        ele.style.transform = 'translate(12vw, 41lvh)';
+      }
+      else if (isBelowSize('3xl')) {
+        ele.style.lineHeight = '1.75rem';
+        ele.style.fontSize = '1.2rem';
+        ele.style.transform = 'translate(16vw, 41.5lvh)';
+      }
+      else if (isBelowSize('4xl')) {
+        ele.style.lineHeight = '1.85rem';
+        ele.style.fontSize = '1.2rem';
+        ele.style.transform = 'translate(18vw, 41.75lvh)';
       }
       else {
         ele.style.lineHeight = '2rem';
@@ -329,7 +374,17 @@ export default function HomePage() {
         memberAni.ele.setIsShowDetail(false);
       });
 
-      ele.style.transform = isBelowSize('md') ? 'translateY(85lvh)' : 'translateY(75lvh)';
+      ele.style.transform = isBelowSize('md')
+        ? 'translateY(85lvh)'
+        : isBelowSize('xl')
+          ? 'translateY(75lvh)'
+          : isBelowSize('2xl')
+            ? 'translateY(70lvh)'
+            : isBelowSize('3xl')
+              ? 'translateY(66lvh)'
+              : isBelowSize('4xl')
+                ? 'translateY(62lvh)'
+                : 'translateY(58lvh)';
     })
     .when({ on: 1, to: 1.35 }, (ele) => {
       memberTypewriter1Ref.current?.retype(memberTitlePrimary, 120);
@@ -341,7 +396,17 @@ export default function HomePage() {
         memberAni.ele.setIsShowDetail(false);
       });
 
-      ele.style.transform = isBelowSize('md') ? 'translateY(75lvh)' : 'translateY(65lvh)';
+      ele.style.transform = isBelowSize('md')
+        ? 'translateY(75lvh)'
+        : isBelowSize('xl')
+          ? 'translateY(65lvh)'
+          : isBelowSize('2xl')
+            ? 'translateY(62lvh)'
+            : isBelowSize('3xl')
+              ? 'translateY(60lvh)'
+              : isBelowSize('4xl')
+                ? 'translateY(58lvh)'
+                : 'translateY(56lvh)';
     })
     .when({ on: 1.35, to: 1.7 }, (ele) => {
       memberTypewriter1Ref.current?.retype(memberTitlePrimary, 120);
@@ -353,7 +418,17 @@ export default function HomePage() {
         memberAni.ele.setIsShowDetail(false);
       });
 
-      ele.style.transform = isBelowSize('md') ? 'translateY(75lvh)' : 'translateY(65lvh)';
+      ele.style.transform = isBelowSize('md')
+        ? 'translateY(75lvh)'
+        : isBelowSize('xl')
+          ? 'translateY(65lvh)'
+          : isBelowSize('2xl')
+            ? 'translateY(62lvh)'
+            : isBelowSize('3xl')
+              ? 'translateY(60lvh)'
+              : isBelowSize('4xl')
+                ? 'translateY(58lvh)'
+                : 'translateY(56lvh)';
     })
     .when({ on: 1.7, to: 3 }, (ele) => {
       memberTypewriter1Ref.current?.retype(memberTitleSecondary, 120);
@@ -368,7 +443,11 @@ export default function HomePage() {
       ele.style.transform =
         isBelowSize('xs') ? 'translate(calc(-50vw + 4rem), 58lvh) rotate(-90deg)'
           : isBelowSize('md') ? 'translate(calc(-50vw + 8rem), 58lvh) rotate(-90deg)'
-            : 'translateY(50lvh)';
+            : isBelowSize('xl') ? 'translateY(54lvh)'
+              : isBelowSize('2xl') ? 'translateY(52lvh)'
+                : isBelowSize('3xl') ? 'translateY(51lvh)'
+                  : isBelowSize('4xl') ? 'translateY(50.5lvh)'
+                    : 'translateY(50lvh)';
     })
     .after({ on: 3 }, (ele) => {
     });
@@ -405,8 +484,16 @@ export default function HomePage() {
     })
     .when({ on: 1.7, to: 3 }, (ele) => {
       circlesAni.forEach(circleAni => {
-        circleAni.ele.style.scale = 2;
-        circleAni.ele.style.transform = 'translate(-23vw, 30lvh)';
+        circleAni.ele.style.scale = isBelowSize('md') ? 1.8 : isBelowSize('xl') ? 1.9 : 2;
+        circleAni.ele.style.transform = isBelowSize('md')
+          ? 'translate(-12vw, 30lvh)'
+          : isBelowSize('2xl')
+            ? 'translate(-18vw, 30lvh)'
+            : isBelowSize('3xl')
+              ? 'translate(-20vw, 30lvh)'
+              : isBelowSize('4xl')
+                ? 'translate(-22vw, 30lvh)'
+                : 'translate(-23vw, 30lvh)';
       });
       ele.style.opacity = '70%';
     })
@@ -433,7 +520,7 @@ export default function HomePage() {
       <div
         ref={infoRef}
         style={{ transform: 'translate(-100%, 40lvh)' }}
-        className='fixed z-20 top-0 left-0 drop-shadow-xl drop-shadow-black/70 max-w-[calc(100vw_-_4rem)] sm:max-w-3xl 2xl:max-w-[60vw] transition-all ease-in-out duration-500'
+        className='fixed z-20 top-0 left-0 drop-shadow-xl drop-shadow-black/70 max-w-[calc(100vw_-_4rem)] sm:max-w-3xl 2xl:max-w-[60vw] 3xl:max-w-[50vw] 4xl:max-w-[45vw] transition-all ease-in-out duration-500'
       >
         <Typewriter
           ref={infoTypewriter1Ref}
@@ -458,7 +545,7 @@ export default function HomePage() {
               </>
             )}
             speed={currentLocale === 'zh' ? 40 : 20}
-            className='flex flex-col gap-4 drop-shadow-md drop-shadow-white/70 font-extrabold mt-4 max-w-[80vw] md:max-w-[50vw]'
+            className='flex flex-col gap-4 drop-shadow-md drop-shadow-white/70 font-extrabold mt-4 max-w-[80vw] md:max-w-[50vw] 3xl:max-w-[40vw] 4xl:max-w-[36vw] text-base md:text-lg 3xl:text-xl 4xl:text-2xl'
           />
         </div>
       </div>
@@ -468,9 +555,9 @@ export default function HomePage() {
         <div
           ref={aboutUsRef}
           style={{ transform: 'translateY(calc(100lvh + 5rem))' }}
-          className='fixed z-10 top-0 w-full min-h-lvh flex justify-center bg-neutral-950 p-40 transition ease-in-out duration-700'
+          className='fixed z-10 top-0 w-full min-h-lvh flex justify-center bg-neutral-950 p-40 3xl:p-48 4xl:p-56 transition ease-in-out duration-700'
         >
-          <h1 className='absolute z-10 right-0 top-20 sm:top-[30lvh] text-[4rem] sm:text-[4rem] md:text-[5rem] lg:text-[6rem] xl:text-[8rem] font-bold text-right select-none'>
+          <h1 className='absolute z-10 right-0 top-20 sm:top-[30lvh] text-[4rem] sm:text-[4rem] md:text-[5rem] lg:text-[6rem] xl:text-[8rem] 3xl:text-[9rem] 4xl:text-[10rem] font-bold text-right select-none'>
             <Typewriter
               ref={memberTypewriter1Ref}
               speed={500}
@@ -483,7 +570,7 @@ export default function HomePage() {
           <div
             ref={memberGroupRef}
             style={{ transform: 'translateY(75lvh)' }}
-            className='absolute z-11 top-0 flex justify-center items-center gap-4 sm:gap-6 md:gap-14 lg:gap-20 xl:gap-28 2xl:gap-32 transition ease-in-out duration-700'
+            className='absolute z-11 top-0 flex justify-center items-center gap-4 sm:gap-6 md:gap-14 lg:gap-20 xl:gap-28 2xl:gap-32 3xl:gap-36 4xl:gap-40 transition ease-in-out duration-700'
           >
             {members.map((member, i) => {
               const name = pickLocalized(currentLocale, member?.name, teamLocale?.untitled ?? '');

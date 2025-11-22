@@ -42,12 +42,14 @@ const MemberCard = forwardRef(({ name, img, details }, ref) => {
         src={img}
         alt={name}
         className={`size-16 min-w-16 min-h-16 object-cover
-                    sm:size-24 sm:min-w-24 sm:min-h-24 
-                    md:size-24 md:min-w-24 md:min-h-24 
-                    lg:size-32 lg:min-w-32 lg:min-h-32 
-                    2xl:size-40 2xl:min-w-40 2xl:min-h-40 
-                    rounded-full border-2 border-white outline-2 outline-offset-2 sm:outline-offset-4 md:outline-offset-6 lg:outline-offset-8 
-                    shadow-[0_0_64px_8px] shadow-white/20 select-none pointer-events-none 
+                    sm:size-24 sm:min-w-24 sm:min-h-24
+                    md:size-24 md:min-w-24 md:min-h-24
+                    lg:size-32 lg:min-w-32 lg:min-h-32
+                    2xl:size-40 2xl:min-w-40 2xl:min-h-40
+                    3xl:size-48 3xl:min-w-48 3xl:min-h-48
+                    4xl:size-56 4xl:min-w-56 4xl:min-h-56
+                    rounded-full border-2 border-white outline-2 outline-offset-2 sm:outline-offset-4 md:outline-offset-6 lg:outline-offset-8
+                    shadow-[0_0_64px_8px] shadow-white/20 select-none pointer-events-none
                     transition-all ease-in-out duration-500
                     ${isMobileShowDetail ? 'rotate-90' : 'rotate-0'}
                     `}
@@ -62,12 +64,14 @@ const MemberCard = forwardRef(({ name, img, details }, ref) => {
           lg:top-32 lg:w-72 lg:h-56 lg:p-3 lg:gap-2
           xl:top-32 xl:w-80 xl:h-60 xl:p-4 xl:gap-2
           2xl:top-40 2xl:w-96 2xl:h-64 2xl:p-6 2xl:gap-5
-          flex flex-col items-start lg:items-center 
+          3xl:top-44 3xl:w-[26rem] 3xl:h-72 3xl:p-8 3xl:gap-6
+          4xl:top-52 4xl:w-[28rem] 4xl:h-80 4xl:p-10 4xl:gap-7
+          flex flex-col items-start lg:items-center
           drop-shadow-md drop-shadow-white/70 transition-all ease-in-out duration-500
           ${isMobileShowDetail ? 'rotate-90' : 'rotate-0'}
         `}
       >
-        <div className={`text-sm sm:text-base xl:text-lg font-bold text-center transition-all ease-in-out duration-500 ${showDetail}`}>{name}</div>
+        <div className={`text-sm sm:text-base xl:text-lg 3xl:text-xl 4xl:text-2xl font-bold text-center transition-all ease-in-out duration-500 ${showDetail}`}>{name}</div>
         {/* <div
           className={`
             hidden 
@@ -83,12 +87,12 @@ const MemberCard = forwardRef(({ name, img, details }, ref) => {
         <div
           className={`
             w-full flex flex-col gap-1
-            text-xs sm:text-sm
+            text-xs sm:text-sm 3xl:text-base 4xl:text-lg
             text-start md:text-left lg:text-center
-            transition-all ease-in-out duration-700 
+            transition-all ease-in-out duration-700
             ${showDetail}
           `}
-        >          
+        >
           <div>{educationLabel}{colon} {educationText}</div>
           <div>{specialtyLabel}{colon} {specialtyText}</div>
         </div>
