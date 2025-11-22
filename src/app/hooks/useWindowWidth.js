@@ -18,11 +18,21 @@ const sizes = {
 };
 
 export default function useWindowWidth() {
-  const getWidth = () => (typeof window !== 'undefined' ? window.innerWidth : NaN);
+  const getWidth = () =>
+    typeof window !== 'undefined' ? window.innerWidth : NaN;
+
+  const getHeight = () =>
+    typeof window !== 'undefined' ? window.innerHeight : NaN;
+
   const [windowWidth, setWindowWidth] = useState(getWidth());
+  const [windowHeight, setWindowHeight] = useState(getHeight());
 
   useEffect(() => {
-    const onResize = () => setWindowWidth(getWidth());
+    const onResize = () => {
+      setWindowWidth(getWidth());
+      setWindowHeight(getHeight());
+    };
+
     onResize();
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
@@ -51,5 +61,12 @@ export default function useWindowWidth() {
   // 大於等於該區間起點
   const isAboveSize = (label) => windowWidth >= (sizes[label] ?? -Infinity);
 
-  return { windowSize, windowWidth, sizes, isBelowSize, isAboveSize };
+  return {
+    windowSize,
+    windowWidth,
+    windowHeight,
+    sizes,
+    isBelowSize,
+    isAboveSize,
+  };
 }

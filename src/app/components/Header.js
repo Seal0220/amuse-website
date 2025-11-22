@@ -61,7 +61,7 @@ export default function Header() {
 
   return (
     <header className='fixed top-0 w-lvw z-200 text-white bg-gradient-to-b from-black/80 via-black/40 to-transparent overflow-hidden pointer-events-none'>
-      <div className='mx-auto flex items-center justify-between px-4 md:px-8 py-4 md:py-6'>
+      <div className='mx-auto flex items-center justify-between px-4 2xl:px-4 py-4 2xl:py-4'>
         {/* 左：LOGO（手機/桌機皆顯示） */}
         <div
           className='flex items-center active:-translate-y-1 hover:-translate-y-1 cursor-pointer transition-all duration-300 ease-in-out pointer-events-auto'
@@ -70,15 +70,15 @@ export default function Header() {
           <img
             src='/Amuse-LOGO-w.png'
             alt={locale.company_name}
-            className='h-14 md:h-20 object-contain select-none pointer-events-none'
+            className='h-14 2xl:h-20 object-contain select-none pointer-events-none'
             draggable='false'
             onContextMenu={(e) => e.preventDefault()}
           />
         </div>
 
         {/* 右：桌機導覽（md 以上） */}
-        <nav className='hidden md:flex flex-row gap-10 pointer-events-auto pr-2 md:pr-8'>
-          <div className='flex flex-row gap-8 lg:gap-20 text-lg tracking-wide items-center'>
+        <nav className='hidden lg:flex flex-row gap-10 pointer-events-auto pr-4 xl:pr-8'>
+          <div className='flex flex-row gap-12 xl:gap-16 2xl:gap-20 text-base xl:text-lg tracking-wide items-center'>
             <a
               href={`/${currentLocale}`}
               onClick={(e) => navigateSamePage(e, 'home')}
@@ -110,7 +110,7 @@ export default function Header() {
 
           <button
             onClick={toggleLang}
-            className='ml-6 border border-neutral-500 px-3 py-1 rounded hover:bg-neutral-800 transition cursor-pointer'
+            className='ml-2 xl:ml-6 border border-neutral-500 px-3 py-1 rounded hover:bg-neutral-800 transition cursor-pointer'
           >
             {currentLocale === 'zh' ? 'EN' : '中'}
           </button>
@@ -122,7 +122,7 @@ export default function Header() {
             aria-label='Open menu'
             aria-expanded={menuOpen ? 'true' : 'false'}
             onClick={() => setMenuOpen((v) => !v)}
-            className='size-12 md:hidden pointer-events-auto p-2 rounded border border-white/30 active:bg-white/10 transition-all duration-200 ease-in-out'
+            className='size-12 lg:hidden pointer-events-auto p-2 rounded border border-white/30 active:bg-white/10 transition-all duration-200 ease-in-out'
           >
             <IoIosMenu className='size-full' />
           </button>
@@ -132,7 +132,7 @@ export default function Header() {
       {/* 手機全螢幕選單（md 以下） */}
       <div
         className={`
-          md:hidden fixed inset-0 z-[110] pointer-events-auto
+          lg:hidden fixed inset-0 z-[110] pointer-events-auto
           bg-neutral-950/95 backdrop-blur
           transition-opacity duration-300 ease-in-out
           ${menuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
