@@ -42,9 +42,11 @@ export default function ExhibitionSpace() {
         const res = await fetch('/api/works?type=exhibition-space');
         const data = await res.json();
         if (canceled) return;
-        const sorted = [...data].sort((a, b) =>
-          String(a.year || '').localeCompare(String(b.year || ''))
-        );
+        const sorted = [...data].sort((a, b) => {
+          const ay = Number(a.year) || 0;
+          const by = Number(b.year) || 0;
+          return by - ay; // 年份大的排前面
+        });
         setWorks(sorted);
       } finally {
         if (!canceled) setLoading(false);

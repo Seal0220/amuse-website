@@ -57,7 +57,7 @@ export default function Sidebar() {
         ref={panelRef}
         className={`
           bg-neutral-950 border-r border-t border-white/15 flex flex-col
-          w-64 h-dvh md:h-screen
+          w-64 h-dvh md:h-auto
           fixed md:static left-0 top-0 z-210 md:z-auto
           transition-transform duration-300 ease-in-out
           ${open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
