@@ -223,8 +223,8 @@ export default function AdminMembersPage() {
           </section>
         ) : (
           <aside className='hidden md:flex md:flex-col md:w-90 md:h-screen border-r border-white/15 gap-6'>
-            <div className='flex flex-row justify-between'>
-              <div className='p-4 text-xl font-semibold border-b border-neutral-800 tracking-wide'>
+            <div className='flex flex-row justify-between border-b border-neutral-800'>
+              <div className='p-4 text-xl font-semibold tracking-wide'>
                 成員列表
               </div>
               <div className='p-4'>

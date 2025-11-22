@@ -2,10 +2,11 @@
 import React, { useEffect, useRef, useState, useLayoutEffect, useMemo } from 'react';
 import ImageSlider from '@/app/components/work/ImageSlider';
 import { useRouter, usePathname } from 'next/navigation';
-import { IoIosArrowBack } from "react-icons/io";
+import { IoIosArrowBack, IoIosArrowDown } from 'react-icons/io';
 import Typewriter, { startTypewriter } from '@/app/components/Typewriter';
 import useLocale from '@/app/hooks/useLocale';
 import FadeOut from '../FadeOut';
+import SubWorks from './SubWorks';
 
 export default function Work({ lang, work, type }) {
   const router = useRouter();
@@ -20,7 +21,17 @@ export default function Work({ lang, work, type }) {
   const aria = workLocale.aria || {};
   const dash = localeDict.pages?.home?.team?.missing || '—';
 
-  const { images, title, year, location, medium, management, description, size = {} } = work || {};
+  const {
+    images,
+    title,
+    year,
+    location,
+    medium,
+    management,
+    description,
+    size = {},
+    children = [],
+  } = work || {};
 
   // ---------- Typewriter refs ----------
   const fadeOutRef = useRef(null);
@@ -103,12 +114,11 @@ export default function Work({ lang, work, type }) {
       router.replace(`/${currentLocale}/works/${type}`);
     });
     fadeOutRef.current?.start();
-  }
+  };
 
   return (
     <div className='relative w-full min-h-lvh h-auto bg-neutral-800 overflow-x-hidden'>
       <div className='size-full flex flex-col bg-neutral-950'>
-
         {/* 圖片區 */}
         <div className='relative w-full h-[60lvh] sm:h-[80lvh]'>
           <ImageSlider images={images} />
@@ -117,7 +127,6 @@ export default function Work({ lang, work, type }) {
 
         {/* 主內容 */}
         <div className='relative w-full bg-neutral-950 flex-1 flex flex-col gap-10 items-center'>
-
           {/* 頂部線 + 返回鍵 */}
           <div className='sticky z-50 w-full top-0 left-0 flex items-center justify-center bg-neutral-950 pt-16 sm:pt-32'>
             <div
@@ -126,15 +135,24 @@ export default function Work({ lang, work, type }) {
               aria-label={aria.back || 'Back to project list'}
             >
               <IoIosArrowBack className='mt-0.5' />
-              <Typewriter ref={backTypeRef} speed={40} className='font-bold' content={typeName} />
-              <Typewriter ref={backListRef} speed={40} className='text-[0.6rem] sm:text-sm' content={listText} />
+              <Typewriter
+                ref={backTypeRef}
+                speed={40}
+                className='font-bold'
+                content={typeName}
+              />
+              <Typewriter
+                ref={backListRef}
+                speed={40}
+                className='text-[0.6rem] sm:text-sm'
+                content={listText}
+              />
             </div>
             <div className='relative h-0.5 w-full bg-gradient-to-r from-transparent via-white to-transparent' />
           </div>
 
           {/* 主體內容 */}
           <div className='pt-10 sm:pt-20 flex flex-col gap-10 sm:gap-16 items-center px-4 sm:px-0'>
-
             {/* 標題橢圓 */}
             <div className='relative w-fit text-shadow-white text-shadow-[0_0_24px]'>
               <div className='w-fit h-fit px-8 sm:px-20 bg-transparent border border-l-2 border-r-2 border-white rounded-[50%/50%] shadow-[0_0_48px_16px] shadow-white/25 overflow-hidden'>
@@ -143,7 +161,11 @@ export default function Work({ lang, work, type }) {
                     <Typewriter ref={titleRef} speed={40} content={title || ''} />
                   </div>
                   <div className='text-sm sm:text-base text-center font-bold inline-block tracking-[0.25rem] sm:tracking-[0.5rem] -mr-[0.25rem] sm:-mr-[0.5rem] whitespace-nowrap'>
-                    <Typewriter ref={yearRef} speed={50} content={dashIfEmpty(year)} />
+                    <Typewriter
+                      ref={yearRef}
+                      speed={50}
+                      content={dashIfEmpty(year)}
+                    />
                   </div>
                 </div>
               </div>
@@ -157,9 +179,22 @@ export default function Work({ lang, work, type }) {
                 [mgmtLabelRef, mgmtValRef, labels.management || 'Client:', dashIfEmpty(management)],
                 [sizeLabelRef, sizeValRef, labels.size || 'Dimensions (cm):', sizeText],
               ].map(([labelRef, valRef, label, val], i) => (
-                <div key={i} className='flex flex-col sm:flex-row gap-0.5 sm:gap-0 justify-center px-14 sm:px-0 min-w-dvw max-w-dvw sm:min-w-0 sm:max-w-none'>
-                  <Typewriter ref={labelRef} speed={40} className='text-[10px] sm:text-sm mt-1 mr-2 w-20' content={label} />
-                  <Typewriter ref={valRef} speed={40} className='font-bold text-xs sm:text-base' content={val} />
+                <div
+                  key={i}
+                  className='flex flex-col sm:flex-row gap-0.5 sm:gap-0 justify-center px-14 sm:px-0 min-w-dvw max-w-dvw sm:min-w-0 sm:max-w-none'
+                >
+                  <Typewriter
+                    ref={labelRef}
+                    speed={40}
+                    className='text-[10px] sm:text-sm mt-1 mr-2 w-20'
+                    content={label}
+                  />
+                  <Typewriter
+                    ref={valRef}
+                    speed={40}
+                    className='font-bold text-xs sm:text-base'
+                    content={val}
+                  />
                 </div>
               ))}
             </div>
@@ -167,11 +202,9 @@ export default function Work({ lang, work, type }) {
             {/* 描述文字 */}
             <div
               ref={descBoxRef}
-              className='max-w-dvw sm:max-w-3xl px-8 sm:px-0 text-base sm:text-lg font-medium tracking-wide leading-7 sm:leading-8 text-left'
+              className='max-w-dvw sm:max-w-3xl px-8 sm:px-0 text-base sm:text-lg font-medium tracking-wide leading-7 sm:leading-8 text-left overflow-hidden whitespace-pre-line'
               style={{
                 height: descH != null ? `${descH}px` : '16rem',
-                overflow: 'hidden',
-                whiteSpace: 'pre-line',
               }}
             >
               <Typewriter ref={descRef} speed={30} content={description || ''} />
@@ -180,9 +213,11 @@ export default function Work({ lang, work, type }) {
             {/* 隱形量測 */}
             <div
               ref={descMeasureRef}
-              className='max-w-[90vw] sm:max-w-3xl text-base sm:text-lg font-medium tracking-wide leading-7 sm:leading-8 whitespace-pre-line pointer-events-none'
-              style={{ position: 'absolute', visibility: 'hidden', zIndex: -1 }}
+              className='absolute hidden -z-10 max-w-[90vw] sm:max-w-3xl text-base sm:text-lg font-medium tracking-wide leading-7 sm:leading-8 whitespace-pre-line pointer-events-none'
             />
+
+            {/* 子作品列表*/}
+            <SubWorks children={children} />
           </div>
         </div>
       </div>
